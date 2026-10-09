@@ -9,6 +9,7 @@ import { toUrl } from '@/lib/utils';
 import { useTenant } from '@/composables/useTenant';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editBusiness } from '@/routes/business';
+import { index as charges } from '@/routes/charges';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import { index as sessions } from '@/routes/sessions';
@@ -23,6 +24,9 @@ const sidebarNavItems = computed<NavItem[]>(() => [
     { title: 'Appearance', href: editAppearance() },
     ...(can('manage_business')
         ? [{ title: 'Business', href: editBusiness() }]
+        : []),
+    ...(can('manage_charge_rules')
+        ? [{ title: 'Charges & providers', href: charges() }]
         : []),
 ]);
 

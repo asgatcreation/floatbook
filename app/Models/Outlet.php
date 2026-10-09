@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Ledger\Accounts;
 use App\Support\Tenancy\BelongsToBusiness;
 use Carbon\CarbonImmutable;
 use Database\Factories\OutletFactory;
@@ -31,6 +32,12 @@ class Outlet extends Model
 
     /** @use HasFactory<OutletFactory> */
     use HasFactory, HasUlids;
+
+    protected static function booted(): void
+    {
+        // Cash drawer, income/expense accounts and a wallet per active provider.
+        static::created(fn (Outlet $outlet) => app(Accounts::class)->setUpOutlet($outlet));
+    }
 
     protected function casts(): array
     {

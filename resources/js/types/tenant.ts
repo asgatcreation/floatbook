@@ -5,6 +5,8 @@ export type Permission =
     | 'invite_agents'
     | 'view_audit_log'
     | 'record_transactions'
+    | 'void_transactions'
+    | 'manage_charge_rules'
     | 'approve_float'
     | 'approve_reconciliation'
     | 'reopen_day'

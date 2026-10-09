@@ -6,9 +6,11 @@ use App\Http\Controllers\Auth\EmailVerificationCodeController;
 use App\Http\Controllers\Auth\LockController;
 use App\Http\Controllers\BusinessSwitchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FloatController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -49,6 +51,19 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::delete('staff/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
 
     Route::get('audit-log', [AuditLogController::class, 'index'])->can('view_audit_log')->name('audit-log.index');
+
+    Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('transactions/new', [TransactionController::class, 'create'])->can('record_transactions')->name('transactions.create');
+    Route::post('transactions', [TransactionController::class, 'store'])->can('record_transactions')->middleware('throttle:120,1')->name('transactions.store');
+    Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+    Route::post('transactions/{transaction}/resolve', [TransactionController::class, 'resolve'])->can('record_transactions')->name('transactions.resolve');
+    Route::post('transactions/{transaction}/void', [TransactionController::class, 'void'])->can('void_transactions')->name('transactions.void');
+
+    Route::get('float', [FloatController::class, 'index'])->name('float.index');
+    Route::post('float/movements', [FloatController::class, 'store'])->name('float.store');
+    Route::post('float/movements/{movement}/approve', [FloatController::class, 'approve'])->name('float.approve');
+    Route::post('float/movements/{movement}/reject', [FloatController::class, 'reject'])->name('float.reject');
+    Route::patch('float/accounts/{account}/threshold', [FloatController::class, 'threshold'])->name('float.threshold');
 });
 
 require __DIR__.'/settings.php';

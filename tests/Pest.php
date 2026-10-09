@@ -6,6 +6,7 @@ use App\Models\Membership;
 use App\Models\Outlet;
 use App\Models\User;
 use App\Support\Tenancy\CurrentBusiness;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,6 +23,12 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
+
+// Concurrency tests start real worker processes, which can only see committed data,
+// so these tests commit and clean up by truncating tables instead of rolling back.
+pest()->extend(TestCase::class)
+    ->use(DatabaseTruncation::class)
+    ->in('Concurrency');
 
 /*
 |--------------------------------------------------------------------------

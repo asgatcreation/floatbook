@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Business\SetUpNewBusiness;
 use Carbon\CarbonImmutable;
 use Database\Factories\BusinessFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -31,7 +32,13 @@ class Business extends Model
     /** @use HasFactory<BusinessFactory> */
     use HasFactory, HasUlids;
 
+    // Mirror the database defaults so a freshly created model is complete in memory
+    // (the ledger needs the time zone to work out the business date).
     protected $attributes = [
+        'timezone' => 'Africa/Lagos',
+        'closing_time' => '20:00:00',
+        'require_two_factor' => false,
+        'is_demo' => false,
         'settings' => '{}',
     ];
 
@@ -40,6 +47,9 @@ class Business extends Model
         static::creating(function (Business $business): void {
             $business->slug ??= static::uniqueSlug($business->name);
         });
+
+        // Providers, core accounts and starter charge rules, ready for day one.
+        static::created(fn (Business $business) => app(SetUpNewBusiness::class)($business));
     }
 
     protected function casts(): array

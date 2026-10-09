@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\BusinessSettingsController;
+use App\Http\Controllers\Settings\ChargeRuleController;
 use App\Http\Controllers\Settings\PinController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
@@ -36,6 +37,15 @@ Route::middleware(['auth', 'verified', 'unlocked'])->group(function () {
         ->name('sessions.destroy-others');
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
+
+    Route::middleware(['member', 'can:manage_charge_rules'])->group(function () {
+        Route::get('settings/charges', [ChargeRuleController::class, 'index'])->name('charges.index');
+        Route::post('settings/charges', [ChargeRuleController::class, 'store'])->name('charges.store');
+        Route::put('settings/charges/{rule}', [ChargeRuleController::class, 'update'])->name('charges.update');
+        Route::delete('settings/charges/{rule}', [ChargeRuleController::class, 'destroy'])->name('charges.destroy');
+        Route::post('settings/providers', [ChargeRuleController::class, 'storeProvider'])->name('providers.store');
+        Route::patch('settings/providers/{provider}', [ChargeRuleController::class, 'updateProvider'])->name('providers.update');
+    });
 
     Route::get('settings/business', [BusinessSettingsController::class, 'edit'])
         ->middleware(['member', 'can:manage_business'])

@@ -56,6 +56,7 @@ enum Role: string
             self::Supervisor => [
                 Permission::InviteAgents,
                 Permission::RecordTransactions,
+                Permission::VoidTransactions,
                 Permission::ApproveFloat,
                 Permission::ApproveReconciliation,
                 Permission::ViewReports,

@@ -14,6 +14,8 @@ enum Permission: string
     case InviteAgents = 'invite_agents';
     case ViewAuditLog = 'view_audit_log';
     case RecordTransactions = 'record_transactions';
+    case VoidTransactions = 'void_transactions';
+    case ManageChargeRules = 'manage_charge_rules';
     case ApproveFloat = 'approve_float';
     case ApproveReconciliation = 'approve_reconciliation';
     case ReopenDay = 'reopen_day';

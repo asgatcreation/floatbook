@@ -3,10 +3,13 @@ import { Link, router } from '@inertiajs/vue3';
 import {
     LayoutGrid,
     Lock,
+    Plus,
+    Receipt,
     ScrollText,
     Settings2,
     Store,
     Users,
+    Wallet,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -26,8 +29,13 @@ import { useTenant } from '@/composables/useTenant';
 import { dashboard, lock } from '@/routes';
 import { index as auditLog } from '@/routes/audit-log';
 import { edit as businessSettings } from '@/routes/business';
+import { index as floatIndex } from '@/routes/float';
 import { index as outlets } from '@/routes/outlets';
 import { index as staff } from '@/routes/staff';
+import {
+    create as newTransaction,
+    index as transactions,
+} from '@/routes/transactions';
 import type { NavItem } from '@/types';
 
 const { can } = useTenant();
@@ -35,6 +43,13 @@ const { can } = useTenant();
 const mainNavItems = computed<NavItem[]>(() =>
     [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid, show: true },
+        {
+            title: 'Transactions',
+            href: transactions(),
+            icon: Receipt,
+            show: true,
+        },
+        { title: 'Float', href: floatIndex(), icon: Wallet, show: true },
         {
             title: 'Outlets',
             href: outlets(),
@@ -82,6 +97,23 @@ function lockScreen(): void {
                 </SidebarMenuItem>
             </SidebarMenu>
             <BusinessSwitcher />
+            <SidebarMenu v-if="can('record_transactions')">
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        as-child
+                        tooltip="New transaction"
+                        class="bg-gold font-semibold text-gold-foreground hover:bg-gold/90 hover:text-gold-foreground active:bg-gold/80 active:text-gold-foreground"
+                    >
+                        <Link
+                            :href="newTransaction()"
+                            data-test="nav-new-transaction"
+                        >
+                            <Plus />
+                            <span>New transaction</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
         </SidebarHeader>
 
         <SidebarContent>

@@ -51,6 +51,26 @@ Then open **http://localhost:8010**.
 
 Next time you only need steps 1 and 3. To stop the database: `docker compose stop db`.
 
+### Local test accounts
+
+For trying every screen on your own computer, this command creates a small business
+("Local Test POS") with two outlets, opening balances and a few transactions:
+
+```bash
+php artisan db:seed --class=LocalTestAccountsSeeder
+```
+
+| Role       | Email                       | Password   |
+| ---------- | --------------------------- | ---------- |
+| Owner      | `owner@floatbook.test`      | `password` |
+| Supervisor | `supervisor@floatbook.test` | `password` |
+| Agent      | `agent@floatbook.test`      | `password` |
+| Accountant | `accountant@floatbook.test` | `password` |
+
+These exist only in your local database and the seeder refuses to run in production.
+Emails sent locally (verification codes, invitations) are written to
+`storage/logs/laravel.log` instead of being delivered.
+
 ## Tests and checks
 
 ```bash
