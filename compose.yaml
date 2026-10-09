@@ -1,0 +1,24 @@
+# Local development services. Production uses Neon (see README).
+name: floatbook
+
+services:
+    db:
+        image: postgres:17
+        container_name: floatbook-postgres
+        environment:
+            POSTGRES_DB: floatbook
+            POSTGRES_USER: floatbook
+            POSTGRES_PASSWORD: floatbook
+        ports:
+            - '127.0.0.1:5433:5432'
+        volumes:
+            - floatbook-pgdata:/var/lib/postgresql/data
+            - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U floatbook -d floatbook']
+            interval: 5s
+            timeout: 3s
+            retries: 10
+
+volumes:
+    floatbook-pgdata:
