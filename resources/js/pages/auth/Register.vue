@@ -16,14 +16,15 @@ defineProps<{
 
 defineOptions({
     layout: {
-        title: 'Create an account',
-        description: 'Enter your details below to create your account',
+        title: 'Start your FloatBook',
+        description:
+            'Create your business account. You can add outlets and invite staff next.',
     },
 });
 </script>
 
 <template>
-    <Head title="Register" />
+    <Head title="Create your business account" />
 
     <Form
         v-bind="store.form()"
@@ -33,13 +34,25 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
+                <Label for="business_name">Business name</Label>
+                <Input
+                    id="business_name"
+                    type="text"
+                    required
+                    v-focus
+                    autocomplete="organization"
+                    name="business_name"
+                    placeholder="e.g. Ade & Sons POS"
+                />
+                <InputError :message="errors.business_name" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="name">Your full name</Label>
                 <Input
                     id="name"
                     type="text"
                     required
-                    v-focus
-                    :tabindex="1"
                     autocomplete="name"
                     name="name"
                     placeholder="Full name"
@@ -53,7 +66,6 @@ defineOptions({
                     id="email"
                     type="email"
                     required
-                    :tabindex="2"
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
@@ -66,7 +78,6 @@ defineOptions({
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="3"
                     autocomplete="new-password"
                     name="password"
                     placeholder="Password"
@@ -80,7 +91,6 @@ defineOptions({
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="4"
                     autocomplete="new-password"
                     name="password_confirmation"
                     placeholder="Confirm password"
@@ -92,21 +102,17 @@ defineOptions({
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="5"
                 :disabled="processing"
                 data-test="register-user-button"
             >
                 <Spinner v-if="processing" />
-                Create account
+                Create business account
             </Button>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">
             Already have an account?
-            <TextLink
-                :href="login()"
-                class="underline underline-offset-4"
-                :tabindex="6"
+            <TextLink :href="login()" class="underline underline-offset-4"
                 >Log in</TextLink
             >
         </div>

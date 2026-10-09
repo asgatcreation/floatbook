@@ -59,6 +59,17 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-gold: var(--gold);
+    --color-gold-foreground: var(--gold-foreground);
+    --color-gain: var(--gain);
+    --color-gain-soft: var(--gain-soft);
+    --color-loss: var(--loss);
+    --color-loss-soft: var(--loss-soft);
+    --color-pending: var(--pending);
+    --color-pending-soft: var(--pending-soft);
+    --color-warning: var(--warning);
+    --color-warning-soft: var(--warning-soft);
 }
 
 /*
@@ -75,7 +86,7 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-border, currentColor);
     }
 }
 
@@ -90,76 +101,105 @@
 }
 
 :root {
-    --background: hsl(0 0% 100%);
-    --foreground: hsl(0 0% 3.9%);
-    --card: hsl(0 0% 100%);
-    --card-foreground: hsl(0 0% 3.9%);
-    --popover: hsl(0 0% 100%);
-    --popover-foreground: hsl(0 0% 3.9%);
-    --primary: hsl(0 0% 9%);
-    --primary-foreground: hsl(0 0% 98%);
-    --secondary: hsl(0 0% 92.1%);
-    --secondary-foreground: hsl(0 0% 9%);
-    --muted: hsl(0 0% 96.1%);
-    --muted-foreground: hsl(0 0% 45.1%);
-    --accent: hsl(0 0% 96.1%);
-    --accent-foreground: hsl(0 0% 9%);
-    --destructive: hsl(0 84.2% 60.2%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(0 0% 92.8%);
-    --input: hsl(0 0% 89.8%);
-    --ring: hsl(0 0% 3.9%);
-    --chart-1: hsl(12 76% 61%);
-    --chart-2: hsl(173 58% 39%);
-    --chart-3: hsl(197 37% 24%);
-    --chart-4: hsl(43 74% 66%);
-    --chart-5: hsl(27 87% 67%);
-    --radius: 0.5rem;
-    --sidebar-background: hsl(0 0% 98%);
-    --sidebar-foreground: hsl(240 5.3% 26.1%);
-    --sidebar-primary: hsl(0 0% 10%);
-    --sidebar-primary-foreground: hsl(0 0% 98%);
-    --sidebar-accent: hsl(0 0% 94%);
-    --sidebar-accent-foreground: hsl(0 0% 30%);
-    --sidebar-border: hsl(0 0% 91%);
-    --sidebar-ring: hsl(217.2 91.2% 59.8%);
-    --sidebar: hsl(0 0% 98%);
+    /* FloatBook "Ink & Gold" design tokens. */
+    --radius: 0.75rem;
+
+    --background: #f6f7f4;
+    --foreground: #12161c;
+    --card: #ffffff;
+    --card-foreground: #12161c;
+    --popover: #ffffff;
+    --popover-foreground: #12161c;
+    --primary: #10141b;
+    --primary-foreground: #ffffff;
+    --secondary: #eef0eb;
+    --secondary-foreground: #12161c;
+    --muted: #eef0eb;
+    --muted-foreground: #59616c;
+    --accent: #eef0eb;
+    --accent-foreground: #12161c;
+    --destructive: #b42328;
+    --destructive-foreground: #ffffff;
+    --border: #e2e5df;
+    --input: #d6dad2;
+    --ring: #c98a0c;
+
+    /* Money and status colours. Always paired with a sign or label, never colour alone. */
+    --gold: #e8a317;
+    --gold-foreground: #10141b;
+    --gain: #12723a;
+    --gain-soft: #e3f4e8;
+    --loss: #b42328;
+    --loss-soft: #fbe7e7;
+    --pending: #1d5fd1;
+    --pending-soft: #e6eefc;
+    --warning: #8a5a00;
+    --warning-soft: #fcf1d6;
+
+    --chart-1: #10141b;
+    --chart-2: #e8a317;
+    --chart-3: #1d5fd1;
+    --chart-4: #12723a;
+    --chart-5: #8f96a1;
+
+    --sidebar-background: #ffffff;
+    --sidebar-foreground: #12161c;
+    --sidebar-primary: #10141b;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #eef0eb;
+    --sidebar-accent-foreground: #12161c;
+    --sidebar-border: #e2e5df;
+    --sidebar-ring: #c98a0c;
+    --sidebar: #ffffff;
 }
 
 .dark {
-    --background: hsl(0 0% 3.9%);
-    --foreground: hsl(0 0% 98%);
-    --card: hsl(0 0% 3.9%);
-    --card-foreground: hsl(0 0% 98%);
-    --popover: hsl(0 0% 3.9%);
-    --popover-foreground: hsl(0 0% 98%);
-    --primary: hsl(0 0% 98%);
-    --primary-foreground: hsl(0 0% 9%);
-    --secondary: hsl(0 0% 14.9%);
-    --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(0 0% 16.08%);
-    --muted-foreground: hsl(0 0% 63.9%);
-    --accent: hsl(0 0% 14.9%);
-    --accent-foreground: hsl(0 0% 98%);
-    --destructive: hsl(0 84% 60%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(0 0% 14.9%);
-    --input: hsl(0 0% 14.9%);
-    --ring: hsl(0 0% 83.1%);
-    --chart-1: hsl(220 70% 50%);
-    --chart-2: hsl(160 60% 45%);
-    --chart-3: hsl(30 80% 55%);
-    --chart-4: hsl(280 65% 60%);
-    --chart-5: hsl(340 75% 55%);
-    --sidebar-background: hsl(0 0% 7%);
-    --sidebar-foreground: hsl(0 0% 95.9%);
-    --sidebar-primary: hsl(360, 100%, 100%);
-    --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(0 0% 15.9%);
-    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-    --sidebar-border: hsl(0 0% 15.9%);
-    --sidebar-ring: hsl(217.2 91.2% 59.8%);
-    --sidebar: hsl(240 5.9% 10%);
+    --background: #0b0e13;
+    --foreground: #eef1f5;
+    --card: #12161d;
+    --card-foreground: #eef1f5;
+    --popover: #151a22;
+    --popover-foreground: #eef1f5;
+    --primary: #e8a317;
+    --primary-foreground: #10141b;
+    --secondary: #1a1f28;
+    --secondary-foreground: #eef1f5;
+    --muted: #1a1f28;
+    --muted-foreground: #9aa3b2;
+    --accent: #1f2530;
+    --accent-foreground: #eef1f5;
+    --destructive: #d93d42;
+    --destructive-foreground: #ffffff;
+    --border: #262c37;
+    --input: #2e3542;
+    --ring: #e8a317;
+
+    --gold: #e8a317;
+    --gold-foreground: #10141b;
+    --gain: #4ade80;
+    --gain-soft: rgb(74 222 128 / 0.12);
+    --loss: #ff8a8a;
+    --loss-soft: rgb(255 138 138 / 0.12);
+    --pending: #8fb4ff;
+    --pending-soft: rgb(143 180 255 / 0.14);
+    --warning: #f5c451;
+    --warning-soft: rgb(245 196 81 / 0.14);
+
+    --chart-1: #e8a317;
+    --chart-2: #8fb4ff;
+    --chart-3: #4ade80;
+    --chart-4: #c4a7ff;
+    --chart-5: #6b7280;
+
+    --sidebar-background: #0f1318;
+    --sidebar-foreground: #eef1f5;
+    --sidebar-primary: #e8a317;
+    --sidebar-primary-foreground: #10141b;
+    --sidebar-accent: #1a1f28;
+    --sidebar-accent-foreground: #eef1f5;
+    --sidebar-border: #262c37;
+    --sidebar-ring: #e8a317;
+    --sidebar: #0f1318;
 }
 
 @layer base {
@@ -167,6 +207,10 @@
         @apply border-border outline-ring/50;
     }
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased;
+    }
+    /* Money is easier to scan when digits line up. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
     }
 }

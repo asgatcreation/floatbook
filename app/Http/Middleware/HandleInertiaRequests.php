@@ -2,6 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Permission;
+use App\Models\Membership;
+use App\Models\User;
+use App\Support\Tenancy\CurrentBusiness;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -15,6 +19,8 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function __construct(private CurrentBusiness $tenancy) {}
 
     /**
      * Determines the current asset version.
@@ -35,13 +41,52 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'tenant' => $user instanceof User ? $this->tenantProps($user) : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function tenantProps(User $user): ?array
+    {
+        $business = $this->tenancy->business();
+        $membership = $this->tenancy->membership();
+
+        if ($business === null || $membership === null) {
+            return null;
+        }
+
+        return [
+            'business' => [
+                'id' => $business->id,
+                'name' => $business->name,
+                'is_demo' => $business->is_demo,
+                'require_two_factor' => $business->require_two_factor,
+            ],
+            'membership' => [
+                'id' => $membership->id,
+                'role' => $membership->role->value,
+                'role_label' => $membership->role->label(),
+                'has_pin' => $membership->hasPin(),
+                'outlets' => $membership->outlets->map(fn ($outlet) => ['id' => $outlet->id, 'name' => $outlet->name])->values(),
+                'permissions' => array_map(
+                    fn (Permission $permission) => $permission->value,
+                    $membership->isActive() ? $membership->role->permissions() : [],
+                ),
+            ],
+            'businesses' => fn () => $user->activeMemberships()->with('business:id,name')->get()
+                ->map(fn (Membership $m) => ['id' => $m->business_id, 'name' => $m->business->name, 'role' => $m->role->label()])
+                ->sortBy('name')->values(),
         ];
     }
 }

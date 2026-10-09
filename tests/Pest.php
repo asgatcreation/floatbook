@@ -1,5 +1,11 @@
 <?php
 
+use App\Enums\Role;
+use App\Models\Business;
+use App\Models\Membership;
+use App\Models\Outlet;
+use App\Models\User;
+use App\Support\Tenancy\CurrentBusiness;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -8,43 +14,59 @@ use Tests\TestCase;
 | Test Case
 |--------------------------------------------------------------------------
 |
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "pest()" function to bind different classes or traits.
+| Feature tests run against PostgreSQL (the floatbook_test database) and are
+| wrapped in a transaction that is rolled back after each test.
 |
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
 |--------------------------------------------------------------------------
-| Expectations
+| Helpers
 |--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something()
+function tenancy(): CurrentBusiness
 {
-    // ..
+    return app(CurrentBusiness::class);
+}
+
+/**
+ * A business with a verified owner. Returns [business, owner user, owner membership].
+ *
+ * @return array{0: Business, 1: User, 2: Membership}
+ */
+function businessWithOwner(array $attributes = []): array
+{
+    $owner = User::factory()->create();
+    $business = Business::factory()->withOwner($owner)->create($attributes);
+    $membership = tenancy()->runAs($business, fn () => Membership::query()->where('user_id', $owner->id)->firstOrFail());
+
+    return [$business, $owner, $membership];
+}
+
+/**
+ * Add a member with the given role (and outlets, for supervisors and agents) to a business.
+ *
+ * @param  list<Outlet>  $outlets
+ */
+function addMember(Business $business, Role $role, array $outlets = [], ?User $user = null): Membership
+{
+    $user ??= User::factory()->create();
+
+    return tenancy()->runAs($business, function () use ($business, $role, $outlets, $user) {
+        $membership = Membership::query()->create(['user_id' => $user->id, 'role' => $role]);
+        $membership->syncOutlets(array_map(fn (Outlet $o) => $o->id, $outlets));
+        $user->forceFill(['current_business_id' => $business->id])->save();
+
+        return $membership->load('user', 'outlets');
+    });
+}
+
+function addOutlet(Business $business, array $attributes = []): Outlet
+{
+    return tenancy()->runAs($business, fn () => Outlet::factory()->create($attributes));
 }

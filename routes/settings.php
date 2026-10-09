@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Settings\BusinessSettingsController;
+use App\Http\Controllers\Settings\PinController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SessionController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'unlocked'])->group(function () {
     // A GET-only redirect: Route::redirect() also registers the QUERY verb, which Wayfinder's types don't support yet.
     Route::get('settings', fn () => redirect('/settings/profile'));
 
@@ -13,7 +16,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'unlocked'])->group(function () {
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('settings/security', [SecurityController::class, 'edit'])
@@ -24,7 +27,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
+    Route::put('settings/pin', [PinController::class, 'update'])->middleware(['member', 'throttle:6,1'])->name('pin.update');
+    Route::delete('settings/pin', [PinController::class, 'destroy'])->middleware('member')->name('pin.destroy');
+
+    Route::get('settings/sessions', [SessionController::class, 'index'])->name('sessions.index');
+    Route::delete('settings/sessions', [SessionController::class, 'destroyOthers'])
+        ->middleware('throttle:6,1')
+        ->name('sessions.destroy-others');
+
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
+
+    Route::get('settings/business', [BusinessSettingsController::class, 'edit'])
+        ->middleware(['member', 'can:manage_business'])
+        ->name('business.edit');
+    Route::patch('settings/business', [BusinessSettingsController::class, 'update'])
+        ->middleware(['member', 'can:manage_business'])
+        ->name('business.update');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

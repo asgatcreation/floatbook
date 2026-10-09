@@ -1,0 +1,44 @@
+export type Permission =
+    | 'manage_business'
+    | 'manage_outlets'
+    | 'manage_staff'
+    | 'invite_agents'
+    | 'view_audit_log'
+    | 'record_transactions'
+    | 'approve_float'
+    | 'approve_reconciliation'
+    | 'reopen_day'
+    | 'view_reports'
+    | 'export_reports';
+
+export type RoleValue = 'owner' | 'supervisor' | 'agent' | 'accountant';
+
+export type OutletRef = {
+    id: string;
+    name: string;
+};
+
+export type Tenant = {
+    business: {
+        id: string;
+        name: string;
+        is_demo: boolean;
+        require_two_factor: boolean;
+    };
+    membership: {
+        id: string;
+        role: RoleValue;
+        role_label: string;
+        has_pin: boolean;
+        outlets: OutletRef[];
+        permissions: Permission[];
+    };
+    businesses: { id: string; name: string; role: string }[];
+};
+
+export type RoleOption = {
+    value: RoleValue;
+    label: string;
+    description: string;
+    outlet_scoped: boolean;
+};
