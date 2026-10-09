@@ -46,6 +46,12 @@ jobs:
       - name: Larastan (PHP static analysis)
         run: composer types:check
 
+      - name: Generate typed routes (Wayfinder)
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan wayfinder:generate --with-form
+
       - name: Oxlint + formatter (vp check)
         run: npm run check
 
