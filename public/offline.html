@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>You're offline · FloatBook</title>
+        <meta name="theme-color" content="#10141B" />
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f6f7f4;
+                --card: #fff;
+                --fg: #12161c;
+                --muted: #59616c;
+                --line: #e2e5df;
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #0b0e13;
+                    --card: #12161d;
+                    --fg: #eef1f5;
+                    --muted: #9aa3b2;
+                    --line: #262c37;
+                }
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                min-height: 100svh;
+                display: grid;
+                place-items: center;
+                padding: 24px 16px;
+                background: var(--bg);
+                color: var(--fg);
+                font:
+                    16px/1.5 'Instrument Sans',
+                    system-ui,
+                    -apple-system,
+                    'Segoe UI',
+                    sans-serif;
+            }
+            main {
+                width: 100%;
+                max-width: 420px;
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 20px;
+                padding: 28px;
+            }
+            h1 {
+                margin: 16px 0 6px;
+                font-size: 22px;
+                letter-spacing: -0.02em;
+            }
+            p {
+                margin: 0 0 12px;
+                color: var(--muted);
+            }
+            a {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 48px;
+                padding: 0 20px;
+                margin-top: 8px;
+                border-radius: 14px;
+                background: #e8a317;
+                color: #10141b;
+                font-weight: 700;
+                text-decoration: none;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="9" fill="#E8A317" />
+                <rect x="8" y="9" width="16" height="4" rx="2" fill="#10141B" />
+                <rect
+                    x="8"
+                    y="15"
+                    width="12"
+                    height="4"
+                    rx="2"
+                    fill="#10141B"
+                />
+                <rect x="8" y="21" width="8" height="4" rx="2" fill="#10141B" />
+            </svg>
+            <h1>You're offline</h1>
+            <p>
+                This page needs a connection. You can still record transactions:
+                they are saved on this phone and sent automatically when the
+                network comes back.
+            </p>
+            <a href="/transactions/new">Record a transaction</a>
+        </main>
+    </body>
+</html>

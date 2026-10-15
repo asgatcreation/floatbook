@@ -75,7 +75,39 @@ Sign up at http://localhost:8010/register as a brand-new business. The 6-digit e
 `storage/logs/laravel.log` (search for the newest "Confirm your email"). New businesses get the
 three providers and starter charge rules automatically.
 
+## 7. Failed and pending transactions (reversals)
+
+1. As the agent, record a **Withdraw** `20000` with status **Pending** and tick _"I already gave the
+   customer cash"_. A follow-up case opens and **Reversals** in the sidebar shows a count. (A
+   **Failed** entry opens a case too.)
+2. Open **Reversals**. Each case shows how long it has been open against the 72-hour target.
+   Add a note and ticket number (**Save note**), mark it **Escalated**, then close it with
+   **It went through**, **Customer refunded** or (owner) **Write off**.
+3. A pending entry can also be settled from its receipt page: **It went through** or **It failed**.
+
+## 8. Import a provider statement
+
+1. As the owner or supervisor, open **Statement imports** and upload a CSV or Excel export from
+   Moniepoint, OPay or Palmpay. If the columns aren't recognised you can pick them yourself.
+2. FloatBook compares every row with what was recorded and sorts them into **Matched**,
+   **Doesn't agree**, **Missing in FloatBook** (on the statement but nobody entered it) and
+   **Only in FloatBook** (entered, but the provider has no record of it).
+3. Tick the _Missing in FloatBook_ rows you want and press **Add … to FloatBook**.
+
+## 9. Offline mode (the agent's phone)
+
+Offline mode only works on the built app, not while `npm run dev` is running:
+
+1. Stop `npm run dev` if it's running, then run `npm run build` once.
+2. Log in as the **agent** and open **New transaction** (this saves the page on the device).
+3. In Chrome press **F12 → Network** and set _No throttling_ to **Offline**.
+4. Record a withdrawal. It says _"Saved on this phone"_, the top bar shows **1 waiting to sync**,
+   and the drawer balance already includes it. Reloading the page still works.
+5. Set the network back to **No throttling**. Within a few seconds the entry is sent, the pill
+   disappears and the entry shows under _Your recent entries_. It is never recorded twice.
+6. In Chrome's address bar, the **Install** icon adds FloatBook to the home screen / desktop.
+
 ## What is not built yet
 
-Offline mode for agents, statement import, reversal follow-up, end-of-day reconciliation, the
-live owner dashboard, reports and exports, the demo data and the live website. See `docs/PLAN.md`.
+End-of-day reconciliation, the live owner dashboard, reports and exports, expenses, alerts, the
+demo data and the live website. See `docs/PLAN.md`.

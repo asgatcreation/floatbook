@@ -21,6 +21,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { index, show } from '@/routes/transactions';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Tx = {
     id: string;
     type_label: string;
@@ -82,6 +85,7 @@ function resolve(status: 'successful' | 'failed'): void {
 }
 
 const when = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     dateStyle: 'full',
     timeStyle: 'short',
 });

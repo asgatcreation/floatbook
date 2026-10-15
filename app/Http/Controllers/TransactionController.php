@@ -136,6 +136,7 @@ class TransactionController extends Controller
             'reference' => ['nullable', 'string', 'max:60'],
             'note' => ['nullable', 'string', 'max:200'],
             'client_recorded_at' => ['nullable', 'date'],
+            'source' => ['nullable', Rule::in(['counter', 'offline_sync'])],
         ], ['customer_phone.regex' => 'Enter a valid phone number.']);
 
         $result = $record->handle($this->tenancy->membershipOrFail(), [
@@ -150,6 +151,7 @@ class TransactionController extends Controller
             'customer_phone' => $validated['customer_phone'] ?? null,
             'reference' => $validated['reference'] ?? null,
             'note' => $validated['note'] ?? null,
+            'source' => $request->string('source', 'counter')->value(),
             'client_recorded_at' => $request->filled('client_recorded_at') ? CarbonImmutable::parse($request->string('client_recorded_at')->value()) : null,
         ]);
 

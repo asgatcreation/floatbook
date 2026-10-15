@@ -25,6 +25,7 @@ export type Tenant = {
     business: {
         id: string;
         name: string;
+        timezone: string;
         is_demo: boolean;
         require_two_factor: boolean;
     };

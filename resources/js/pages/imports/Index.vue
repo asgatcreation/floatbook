@@ -11,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { index, show } from '@/routes/imports';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 defineOptions({
     layout: { breadcrumbs: [{ title: 'Statement imports', href: index() }] },
 });
@@ -41,6 +44,7 @@ const statusTone = {
     committed: 'gain',
 } as const;
 const when = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     day: 'numeric',
     month: 'short',
     hour: 'numeric',

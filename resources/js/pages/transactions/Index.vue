@@ -18,6 +18,9 @@ import { Input } from '@/components/ui/input';
 import { useTenant } from '@/composables/useTenant';
 import { create, index, show } from '@/routes/transactions';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Row = {
     id: string;
     type: string;
@@ -94,13 +97,14 @@ const statuses = [
     { value: 'failed', label: 'Failed' },
 ] as const;
 
-const today = new Date().toLocaleDateString('en-CA');
+const today = new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
 const dateLabel = computed(() => {
     if (props.filters.date === today) {
         return 'Today';
     }
 
     return new Intl.DateTimeFormat('en-NG', {
+        timeZone,
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -108,6 +112,7 @@ const dateLabel = computed(() => {
 });
 
 const time = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,

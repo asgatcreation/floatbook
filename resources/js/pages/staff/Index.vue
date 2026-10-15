@@ -32,6 +32,9 @@ import { useInitials } from '@/composables/useInitials';
 import { index } from '@/routes/staff';
 import type { OutletRef, RoleOption, RoleValue } from '@/types';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Member = {
     id: string;
     name: string;
@@ -134,6 +137,7 @@ function cancel(invitation: PendingInvitation): void {
 }
 
 const dateFormat = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     day: 'numeric',
     month: 'short',
 });

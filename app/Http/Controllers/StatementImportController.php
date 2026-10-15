@@ -72,7 +72,7 @@ class StatementImportController extends Controller
         $rows = $import->rows()->with('transaction:id,reference,amount,occurred_at,type')->get();
 
         return Inertia::render('imports/Show', [
-            'import' => [
+            'statement' => [
                 'id' => $import->id,
                 'file' => $import->original_filename,
                 'outlet' => $import->outlet->name,

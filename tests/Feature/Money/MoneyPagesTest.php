@@ -161,3 +161,25 @@ test('adding a provider gives every outlet a wallet for it', function () {
 
     $this->get(route('float.index'))->assertInertia(fn ($page) => $page->has('outlets.0.wallets', 4)->has('outlets.1.wallets', 4));
 });
+
+test('entries synced from an offline phone keep the time they were recorded', function () {
+    $this->freezeTime();
+    $this->actingAs($this->agent->user);
+
+    $twoHoursAgo = now()->subHours(2);
+    $this->postJson(route('transactions.store'), payload($this, ['source' => 'offline_sync', 'client_recorded_at' => $twoHoursAgo->toIso8601String()]))->assertCreated();
+    $this->postJson(route('transactions.store'), payload($this, ['source' => 'offline_sync', 'client_recorded_at' => now()->subDays(5)->toIso8601String()]))->assertCreated();
+    $this->postJson(route('transactions.store'), payload($this, ['source' => 'counter', 'client_recorded_at' => $twoHoursAgo->toIso8601String()]))->assertCreated();
+
+    $times = tenancy()->runAs($this->business, fn () => Transaction::query()->orderBy('created_at')->orderBy('id')->get()
+        ->map(fn ($t) => [$t->source, $t->occurred_at->toDateTimeString()])->all());
+
+    expect($times)->toContain(['offline_sync', $twoHoursAgo->toDateTimeString()])   // believable: kept
+        ->toContain(['offline_sync', now()->toDateTimeString()])                       // 5 days old: not trusted
+        ->toContain(['counter', now()->toDateTimeString()]);                           // counter entries use server time
+});
+
+test('an unknown source is refused', function () {
+    $this->actingAs($this->agent->user)->post(route('transactions.store'), payload($this, ['source' => 'import']))
+        ->assertSessionHasErrors('source');
+});

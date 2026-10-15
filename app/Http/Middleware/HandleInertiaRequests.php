@@ -71,6 +71,7 @@ class HandleInertiaRequests extends Middleware
             'business' => [
                 'id' => $business->id,
                 'name' => $business->name,
+                'timezone' => $business->timezone,
                 'is_demo' => $business->is_demo,
                 'require_two_factor' => $business->require_two_factor,
             ],

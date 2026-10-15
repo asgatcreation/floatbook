@@ -9,7 +9,7 @@ import {
     Wallet,
 } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import TransactionController from '@/actions/App/Http/Controllers/TransactionController';
+import { toast } from 'vue-sonner';
 import Amount from '@/components/Amount.vue';
 import InputError from '@/components/InputError.vue';
 import ProviderDot from '@/components/ProviderDot.vue';
@@ -18,11 +18,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSync } from '@/composables/useSync';
 import { effects, quote } from '@/lib/charges';
 import type { Rule } from '@/lib/charges';
 import { formatNaira } from '@/lib/money';
 import { create, index } from '@/routes/transactions';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Outlet = {
     id: string;
     name: string;
@@ -65,7 +69,11 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
-const errors = computed(() => page.props.errors as Record<string, string>);
+const saveErrors = ref<Record<string, string>>({});
+const errors = computed(() => ({
+    ...(page.props.errors as Record<string, string>),
+    ...saveErrors.value,
+}));
 
 // ---- Form state -------------------------------------------------------------
 const outletId = ref(props.outlets[0]?.id ?? '');
@@ -108,12 +116,30 @@ const change = computed(() =>
 );
 const movesMoney = computed(() => status.value === 'successful');
 
-const cashAfter = computed(
+// Entries saved on this phone but not yet on the server. They live in the phone's
+// queue, so the adjusted balances survive a reload while still offline.
+const sync = useSync();
+const pendingEffects = computed(() =>
+    sync.waiting.value
+        .map((entry) => entry.effect)
+        .filter((effect) => effect?.outlet_id === outletId.value),
+);
+
+// Balances as the server knows them, plus anything saved offline on this phone.
+const cashNow = computed(
     () =>
-        (outlet.value?.cash ?? 0) + (movesMoney.value ? change.value.cash : 0),
+        (outlet.value?.cash ?? 0) +
+        pendingEffects.value.reduce((sum, e) => sum + (e?.cash ?? 0), 0),
+);
+const cashAfter = computed(
+    () => cashNow.value + (movesMoney.value ? change.value.cash : 0),
 );
 const walletBefore = computed(
-    () => outlet.value?.wallets[providerId.value] ?? 0,
+    () =>
+        (outlet.value?.wallets[providerId.value] ?? 0) +
+        pendingEffects.value
+            .filter((e) => e?.provider_id === providerId.value)
+            .reduce((sum, e) => sum + (e?.wallet ?? 0), 0),
 );
 const walletAfter = computed(
     () => walletBefore.value + (movesMoney.value ? change.value.wallet : 0),
@@ -197,48 +223,89 @@ onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 // ---- Save -------------------------------------------------------------------
-function save(): void {
+// Every entry is saved on the phone first, then sent. With a connection the agent sees
+// no difference; without one it waits in the queue and syncs when the network returns.
+function resetForNextCustomer(): void {
+    // A new key means the next save is a new transaction.
+    digits.value = '';
+    status.value = 'successful';
+    cashPaid.value = false;
+    customerPhone.value = '';
+    customerName.value = '';
+    reference.value = '';
+    note.value = '';
+    showDetails.value = false;
+    saveErrors.value = {};
+    idempotencyKey.value = crypto.randomUUID();
+}
+
+async function save(): Promise<void> {
     if (!amount.value || saving.value) {
         return;
     }
 
-    router.post(
-        TransactionController.store.url(),
-        {
-            idempotency_key: idempotencyKey.value,
-            outlet_id: outletId.value,
-            provider_id: providerId.value,
-            type: type.value,
-            amount: amount.value,
-            status: status.value,
-            cash_paid_while_pending: cashPaid.value,
-            customer_phone: customerPhone.value || null,
-            customer_name: customerName.value || null,
-            reference: reference.value || null,
-            note: note.value || null,
-            client_recorded_at: new Date().toISOString(),
-        },
-        {
-            preserveScroll: true,
-            onStart: () => (saving.value = true),
-            onFinish: () => (saving.value = false),
-            onSuccess: () => {
-                // Ready for the next customer. A new key means the next save is a new transaction.
-                digits.value = '';
-                status.value = 'successful';
-                cashPaid.value = false;
-                customerPhone.value = '';
-                customerName.value = '';
-                reference.value = '';
-                note.value = '';
-                showDetails.value = false;
-                idempotencyKey.value = crypto.randomUUID();
+    saving.value = true;
+    const summary = `${formatNaira(amount.value, { trim: true })} ${typeOption.value?.label.toLowerCase() ?? ''}`;
+
+    try {
+        const result = await sync.save(
+            {
+                idempotency_key: idempotencyKey.value,
+                outlet_id: outletId.value,
+                provider_id: providerId.value,
+                type: type.value,
+                amount: amount.value,
+                status: status.value,
+                cash_paid_while_pending: cashPaid.value,
+                customer_phone: customerPhone.value || null,
+                customer_name: customerName.value || null,
+                reference: reference.value || null,
+                note: note.value || null,
+                client_recorded_at: new Date().toISOString(),
             },
-        },
-    );
+            summary,
+            movesMoney.value
+                ? {
+                      outlet_id: outletId.value,
+                      provider_id: providerId.value,
+                      cash: change.value.cash,
+                      wallet: change.value.wallet,
+                  }
+                : null,
+        );
+
+        if (result.ok === 'queued') {
+            toast.success(
+                `Saved on this phone: ${summary}. It will sync when you're back online.`,
+            );
+            resetForNextCustomer();
+        } else if (result.ok) {
+            toast.success(
+                result.duplicate
+                    ? 'Already saved — this entry was not recorded twice.'
+                    : `Saved ${summary}${status.value === 'successful' ? '' : ` as ${status.value}`}.`,
+            );
+            resetForNextCustomer();
+            router.reload({ only: ['outlets', 'recent'] });
+        } else {
+            saveErrors.value = result.errors ?? { amount: result.message };
+            toast.error(result.message);
+        }
+    } finally {
+        saving.value = false;
+    }
 }
 
+// When queued entries reach the server, show the real balances again.
+onMounted(() => {
+    const stop = sync.onSynced(() => {
+        router.reload({ only: ['outlets', 'recent'] });
+    });
+    onUnmounted(stop);
+});
+
 const time = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -303,9 +370,9 @@ const statusTone = (s: string, voided: boolean) =>
                     </p>
                     <p
                         class="text-lg font-bold"
-                        :class="{ 'text-loss': (outlet?.cash ?? 0) < 0 }"
+                        :class="{ 'text-loss': cashNow < 0 }"
                     >
-                        <Amount :kobo="outlet?.cash ?? 0" hide-kobo />
+                        <Amount :kobo="cashNow" hide-kobo />
                     </p>
                 </div>
                 <div class="rounded-2xl border bg-card px-3.5 py-2.5">

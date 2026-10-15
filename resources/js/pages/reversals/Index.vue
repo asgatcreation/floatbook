@@ -23,6 +23,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { index } from '@/routes/reversals';
 import { show as showTransaction } from '@/routes/transactions';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Case = {
     id: string;
     transaction_id: string;
@@ -149,6 +152,7 @@ function dueText(c: Case): string {
 }
 
 const when = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     day: 'numeric',
     month: 'short',
     hour: 'numeric',

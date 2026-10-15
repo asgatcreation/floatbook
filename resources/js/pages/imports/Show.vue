@@ -21,6 +21,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { index, show } from '@/routes/imports';
 import { show as showTransaction } from '@/routes/transactions';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Row = {
     id: number;
     row_number: number;
@@ -35,7 +38,7 @@ type Row = {
 };
 
 const props = defineProps<{
-    import: {
+    statement: {
         id: string;
         file: string;
         outlet: string;
@@ -62,7 +65,7 @@ const props = defineProps<{
 setLayoutProps({
     breadcrumbs: [
         { title: 'Statement imports', href: index() },
-        { title: props.import.file, href: show(props.import.id) },
+        { title: props.statement.file, href: show(props.statement.id) },
     ],
 });
 
@@ -77,16 +80,16 @@ const fieldLabels: Record<string, string> = {
 // ---- Step 2: columns ------------------------------------------------------------
 const mapping = reactive<Record<string, string>>(
     Object.fromEntries(
-        props.fields.map((f) => [f, props.import.mapping?.[f] ?? '']),
+        props.fields.map((f) => [f, props.statement.mapping?.[f] ?? '']),
     ),
 );
 const mapErrors = ref<Record<string, string>>({});
 const checking = ref(false);
-const editingColumns = ref(props.import.status === 'uploaded');
+const editingColumns = ref(props.statement.status === 'uploaded');
 
 function check(): void {
     router.post(
-        StatementImportController.map.url(props.import.id),
+        StatementImportController.map.url(props.statement.id),
         {
             mapping: Object.fromEntries(
                 Object.entries(mapping).map(([k, v]) => [k, v || null]),
@@ -140,7 +143,7 @@ const untypedSelected = computed(() =>
 
 function addMissing(): void {
     router.post(
-        StatementImportController.commit.url(props.import.id),
+        StatementImportController.commit.url(props.statement.id),
         { row_ids: selected.value, default_type: defaultType.value },
         {
             preserveScroll: true,
@@ -151,6 +154,7 @@ function addMissing(): void {
 }
 
 const when = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
@@ -169,7 +173,7 @@ const otherLabel: Record<string, string> = {
 </script>
 
 <template>
-    <Head :title="import.file" />
+    <Head :title="statement.file" />
 
     <div class="flex flex-col gap-6 p-4 md:p-6">
         <div class="flex flex-wrap items-start justify-between gap-3">
@@ -181,18 +185,18 @@ const otherLabel: Record<string, string> = {
                     <ArrowLeft class="size-4" /> All imports
                 </Link>
                 <h1 class="text-2xl font-bold tracking-tight break-all">
-                    {{ import.file }}
+                    {{ statement.file }}
                 </h1>
                 <p
                     class="flex items-center gap-1.5 text-sm text-muted-foreground"
                 >
-                    <ProviderDot :color="import.provider.color" />
-                    {{ import.provider.name }} · {{ import.outlet }} ·
-                    {{ import.row_count }} rows
+                    <ProviderDot :color="statement.provider.color" />
+                    {{ statement.provider.name }} · {{ statement.outlet }} ·
+                    {{ statement.row_count }} rows
                 </p>
             </div>
             <Button
-                v-if="import.status === 'mapped' && !editingColumns"
+                v-if="statement.status === 'mapped' && !editingColumns"
                 variant="outline"
                 size="sm"
                 @click="editingColumns = true"
@@ -227,7 +231,11 @@ const otherLabel: Record<string, string> = {
                         class="h-10 rounded-md border bg-transparent px-2 text-sm"
                     >
                         <option value="">— Not in this file —</option>
-                        <option v-for="h in import.headers" :key="h" :value="h">
+                        <option
+                            v-for="h in statement.headers"
+                            :key="h"
+                            :value="h"
+                        >
                             {{ h }}
                         </option>
                     </select>
@@ -240,7 +248,7 @@ const otherLabel: Record<string, string> = {
                     <thead class="bg-muted/60 text-xs text-muted-foreground">
                         <tr>
                             <th
-                                v-for="h in import.headers"
+                                v-for="h in statement.headers"
                                 :key="h"
                                 class="px-3 py-2 font-medium whitespace-nowrap"
                             >
@@ -255,7 +263,7 @@ const otherLabel: Record<string, string> = {
                             class="border-t"
                         >
                             <td
-                                v-for="h in import.headers"
+                                v-for="h in statement.headers"
                                 :key="h"
                                 class="tabular px-3 py-2 whitespace-nowrap"
                             >
@@ -277,7 +285,7 @@ const otherLabel: Record<string, string> = {
         </section>
 
         <!-- Step 3: results -->
-        <template v-if="!editingColumns && import.status !== 'uploaded'">
+        <template v-if="!editingColumns && statement.status !== 'uploaded'">
             <section
                 aria-label="Summary"
                 class="grid grid-cols-2 gap-3 md:grid-cols-5"
@@ -353,7 +361,7 @@ const otherLabel: Record<string, string> = {
                         </h2>
                         <p class="text-sm text-muted-foreground">
                             Tick the ones that really happened at
-                            {{ import.outlet }}, then add them.
+                            {{ statement.outlet }}, then add them.
                         </p>
                     </div>
                 </div>
@@ -379,7 +387,7 @@ const otherLabel: Record<string, string> = {
                                     type="checkbox"
                                     :value="r.id"
                                     class="size-4 accent-[var(--primary)]"
-                                    :disabled="import.status === 'committed'"
+                                    :disabled="statement.status === 'committed'"
                                 />
                                 <div class="min-w-0 flex-1">
                                     <p class="font-medium">
@@ -408,7 +416,7 @@ const otherLabel: Record<string, string> = {
                         </li>
                     </ul>
                     <div
-                        v-if="import.status !== 'committed'"
+                        v-if="statement.status !== 'committed'"
                         class="flex flex-wrap items-end gap-3 border-t p-4"
                     >
                         <div v-if="untypedSelected" class="grid gap-1.5">

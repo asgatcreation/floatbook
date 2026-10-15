@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { registerServiceWorker } from '@/lib/serviceWorker';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -42,3 +43,6 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
+
+// Lets agents open the entry screen without a network (production builds only).
+registerServiceWorker();

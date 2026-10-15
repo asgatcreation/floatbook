@@ -4,6 +4,9 @@ import { ChevronDown } from '@lucide/vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { index } from '@/routes/audit-log';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Log = {
     id: string;
     action: string;
@@ -66,6 +69,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 const format = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     dateStyle: 'medium',
     timeStyle: 'short',
 });

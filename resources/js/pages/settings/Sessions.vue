@@ -11,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { index } from '@/routes/sessions';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 defineOptions({
     layout: { breadcrumbs: [{ title: 'Devices', href: index() }] },
 });
@@ -25,6 +28,7 @@ const props = defineProps<{
 }>();
 
 const format = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     dateStyle: 'medium',
     timeStyle: 'short',
 });

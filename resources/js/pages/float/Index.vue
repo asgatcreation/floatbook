@@ -35,6 +35,9 @@ import { useTenant } from '@/composables/useTenant';
 import { koboToInput, parseNaira } from '@/lib/money';
 import { index } from '@/routes/float';
 
+import { useBusinessTime } from '@/lib/dates';
+
+const { timeZone } = useBusinessTime();
 type Account = {
     id: string;
     label: string;
@@ -262,6 +265,7 @@ function saveAlert(): void {
 }
 
 const when = new Intl.DateTimeFormat('en-NG', {
+    timeZone,
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
