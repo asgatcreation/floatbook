@@ -178,7 +178,19 @@ const safeguards = [
                             seconds; you see every outlet’s cash, wallet float
                             and profit without being there.
                         </p>
-                        <div class="mt-8 flex flex-wrap gap-3">
+                        <div
+                            v-if="$page.props.auth.user"
+                            class="mt-8 flex flex-wrap gap-3"
+                        >
+                            <Link
+                                :href="dashboard()"
+                                class="inline-flex h-12 items-center gap-2 rounded-xl bg-gold px-6 text-base font-bold text-gold-foreground shadow-sm hover:brightness-95"
+                            >
+                                Open FloatBook
+                                <ArrowRight class="size-4" />
+                            </Link>
+                        </div>
+                        <div v-else class="mt-8 flex flex-wrap gap-3">
                             <Link
                                 :href="register()"
                                 class="inline-flex h-12 items-center gap-2 rounded-xl bg-gold px-6 text-base font-bold text-gold-foreground shadow-sm hover:brightness-95"
@@ -387,7 +399,10 @@ const safeguards = [
             </section>
 
             <!-- Closing call to action -->
-            <section class="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
+            <section
+                v-if="!$page.props.auth.user"
+                class="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6"
+            >
                 <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
                     Close today with the numbers you trust
                 </h2>

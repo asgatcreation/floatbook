@@ -3,6 +3,8 @@ import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import InstallPrompt from '@/components/InstallPrompt.vue';
+import MobileTabBar from '@/components/MobileTabBar.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
@@ -20,8 +22,11 @@ withDefaults(defineProps<Props>(), {
         <AppSidebar />
         <AppContent variant="sidebar" class="min-w-0 overflow-x-clip">
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
+            <InstallPrompt />
             <slot />
+            <MobileTabBar />
         </AppContent>
-        <Toaster />
+        <!-- On phones, toasts sit above the bottom tab bar. -->
+        <Toaster :mobile-offset="{ bottom: '88px' }" />
     </AppShell>
 </template>

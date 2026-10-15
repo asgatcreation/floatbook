@@ -106,6 +106,10 @@ Offline mode only works on the built app, not while `npm run dev` is running:
 5. Set the network back to **No throttling**. Within a few seconds the entry is sent, the pill
    disappears and the entry shows under _Your recent entries_. It is never recorded twice.
 6. In Chrome's address bar, the **Install** icon adds FloatBook to the home screen / desktop.
+   On a real phone, a _"Put FloatBook on this phone"_ card offers the same (on iPhone it shows
+   the Share → Add to Home Screen steps).
+7. At phone width, the menu moves to a bar at the bottom: Home, Transactions, the gold **+** for a
+   new entry, Reversals and More.
 
 ## What is not built yet
 
