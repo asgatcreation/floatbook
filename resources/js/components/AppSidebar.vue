@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import {
+    FileSpreadsheet,
     LayoutGrid,
     Lock,
     Plus,
@@ -31,6 +32,7 @@ import { dashboard, lock } from '@/routes';
 import { index as auditLog } from '@/routes/audit-log';
 import { edit as businessSettings } from '@/routes/business';
 import { index as floatIndex } from '@/routes/float';
+import { index as imports } from '@/routes/imports';
 import { index as outlets } from '@/routes/outlets';
 import { index as reversals } from '@/routes/reversals';
 import { index as staff } from '@/routes/staff';
@@ -58,6 +60,12 @@ const mainNavItems = computed<NavItem[]>(() =>
             icon: RotateCcw,
             show: true,
             badge: tenant.value?.open_reversals,
+        },
+        {
+            title: 'Statement imports',
+            href: imports(),
+            icon: FileSpreadsheet,
+            show: can('import_statements'),
         },
         {
             title: 'Outlets',

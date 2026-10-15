@@ -57,6 +57,7 @@ enum Role: string
                 Permission::InviteAgents,
                 Permission::RecordTransactions,
                 Permission::VoidTransactions,
+                Permission::ImportStatements,
                 Permission::ApproveFloat,
                 Permission::ApproveReconciliation,
                 Permission::ViewReports,

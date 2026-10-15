@@ -7,6 +7,7 @@ export type Permission =
     | 'record_transactions'
     | 'void_transactions'
     | 'manage_charge_rules'
+    | 'import_statements'
     | 'approve_float'
     | 'approve_reconciliation'
     | 'reopen_day'

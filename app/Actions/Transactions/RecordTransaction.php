@@ -132,7 +132,8 @@ class RecordTransaction
 
     /**
      * Entries made offline keep the time they were actually recorded on the phone, as long
-     * as it is believable: not in the future and no more than 3 days old. Otherwise "now".
+     * as it is believable (not in the future, at most 3 days old). Imported statement rows
+     * keep the provider's time (up to a year back). Everything else happens "now".
      *
      * @param  array<string, mixed>  $data
      */
@@ -140,11 +141,16 @@ class RecordTransaction
     {
         $now = CarbonImmutable::now();
         $client = $data['client_recorded_at'] ?? null;
+        $maxAge = match ($data['source'] ?? 'counter') {
+            'offline_sync' => $now->subDays(3),
+            'import' => $now->subYear(),
+            default => null,
+        };
 
-        if (($data['source'] ?? 'counter') !== 'offline_sync' || ! $client instanceof CarbonImmutable) {
+        if ($maxAge === null || ! $client instanceof CarbonImmutable) {
             return $now;
         }
 
-        return $client->isAfter($now->addMinutes(2)) || $client->isBefore($now->subDays(3)) ? $now : $client;
+        return $client->isAfter($now->addMinutes(2)) || $client->isBefore($maxAge) ? $now : $client;
     }
 }

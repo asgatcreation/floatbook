@@ -16,6 +16,7 @@ enum Permission: string
     case RecordTransactions = 'record_transactions';
     case VoidTransactions = 'void_transactions';
     case ManageChargeRules = 'manage_charge_rules';
+    case ImportStatements = 'import_statements';
     case ApproveFloat = 'approve_float';
     case ApproveReconciliation = 'approve_reconciliation';
     case ReopenDay = 'reopen_day';
