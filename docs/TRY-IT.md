@@ -130,7 +130,31 @@ Offline mode only works on the built app, not while `npm run dev` is running:
 7. At phone width, the menu moves to a bar at the bottom: Home, Transactions, the gold **+** for a
    new entry, Reversals and More.
 
+## 11. Expenses
+
+1. Open **Expenses**. Record generator fuel: pick the outlet, **Generator fuel**, type `4,500`,
+   choose **Cash in drawer** and add a note. The month's total and a bar per category appear.
+2. The drawer goes down by ₦4,500 and the day's profit is counted after it. A mistake is
+   **Void**ed with a reason (owner or supervisor); the money goes back and the line stays, crossed out.
+
+## 12. End of day (counting the drawer)
+
+1. Open **End of day**. Each outlet shows its last 7 days: _Not counted_, _To approve_,
+   _Balanced_ or _Difference_. Press **Count today** for Ketu Main.
+2. The count is **blind**: you don't see what the books expect. Count the notes with the − / +
+   buttons (₦1,000 × n, ₦500 × n …), add coins, and type each terminal's balance from its screen.
+3. If it doesn't match, FloatBook asks why. **Submit count** closes the day: nothing more can be
+   recorded, voided or moved on it for that outlet.
+4. Now you see **Books vs Counted vs Difference** for the drawer and each wallet. Log in as the
+   **supervisor** (someone else must approve your own count; only the owner may approve their own)
+   and **Approve**, optionally holding a staff member responsible for a shortage, or
+   **Send back for a recount**.
+5. Approving posts the difference so the books match the shop. Shortages owed by staff show on
+   the End of day page; **Paid back** puts the cash into today's drawer.
+6. The **owner** can **Reopen this day** with a reason: the difference is undone and it can be
+   counted again. Everything is in the audit log.
+
 ## What is not built yet
 
-End-of-day reconciliation, the live owner dashboard, reports and exports, expenses, alerts, the
-demo data and the live website. See `docs/PLAN.md`.
+The live owner dashboard, reports and exports, alerts and the daily summary email, the demo data and
+the live website. See `docs/PLAN.md`.

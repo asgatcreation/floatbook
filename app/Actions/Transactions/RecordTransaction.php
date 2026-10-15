@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Support\Audit;
 use App\Support\Charges\ChargeCalculator;
 use App\Support\Charges\ChargeQuote;
+use App\Support\Ledger\DayLocks;
 use App\Support\Ledger\Ledger;
 use App\Support\Money\Money;
 use Carbon\CarbonImmutable;
@@ -33,6 +34,7 @@ class RecordTransaction
         private Ledger $ledger,
         private Audit $audit,
         private ReversalCases $reversals,
+        private DayLocks $days,
     ) {}
 
     /**
@@ -61,6 +63,7 @@ class RecordTransaction
         $cashPaid = $status === TransactionStatus::Pending && $type->canPayCashWhilePending() && ($data['cash_paid_while_pending'] ?? false);
         $quote = $data['quote'] ?? $this->charges->quote($type, $provider->id, $outlet->id, $data['amount']);
         $occurredAt = $this->occurredAt($data);
+        $this->days->assertOpen($outlet->id, $occurredAt->setTimezone($outlet->business->timezone)->toDateString());
 
         try {
             $transaction = DB::transaction(function () use ($by, $data, $terminal, $outlet, $type, $status, $cashPaid, $quote, $occurredAt): Transaction {

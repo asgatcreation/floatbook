@@ -21,7 +21,10 @@ use Illuminate\Support\Facades\DB;
  */
 class Ledger
 {
-    public function __construct(private CurrentBusiness $tenancy) {}
+    /** Entry types that may still be posted to a closed day: the reconciliation's own. */
+    public const CLOSED_DAY_TYPES = ['reconciliation', 'reconciliation_reopen'];
+
+    public function __construct(private CurrentBusiness $tenancy, private DayLocks $days) {}
 
     /**
      * @param  array<int, array{0: LedgerAccount|string, 1: int}>  $lines  [account, kobo] pairs; debit > 0, credit < 0.
@@ -47,6 +50,11 @@ class Ledger
         }
 
         $occurredAt ??= CarbonImmutable::now();
+
+        // A counted day is closed: nothing else may land in it.
+        if ($outletId !== null && ! in_array($type, self::CLOSED_DAY_TYPES, true)) {
+            $this->days->assertOpen($outletId, $occurredAt->setTimezone($business->timezone)->toDateString());
+        }
 
         return DB::transaction(function () use ($business, $type, $amounts, $outletId, $source, $memo, $occurredAt, $reversesEntryId): JournalEntry {
             $ids = array_keys($amounts);

@@ -8,6 +8,7 @@ use App\Models\ReversalCase;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\Ledger\DayLocks;
 use App\Support\Ledger\Ledger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +19,12 @@ use Illuminate\Validation\ValidationException;
  */
 class VoidTransaction
 {
-    public function __construct(private Ledger $ledger, private Audit $audit, private ReversalCases $reversals) {}
+    public function __construct(
+        private Ledger $ledger,
+        private Audit $audit,
+        private ReversalCases $reversals,
+        private DayLocks $days,
+    ) {}
 
     public function handle(Transaction $transaction, User $by, string $reason): Transaction
     {
@@ -28,6 +34,9 @@ class VoidTransaction
             if ($fresh->isVoided()) {
                 throw ValidationException::withMessages(['reason' => 'This transaction has already been voided.']);
             }
+
+            // Its day has been counted: changing it would make the count wrong.
+            $this->days->assertOpen($fresh->outlet_id, $fresh->business_date, 'reason');
 
             $settled = ReversalCase::query()->where('transaction_id', $fresh->id)->whereNotNull('journal_entry_id')->exists();
 

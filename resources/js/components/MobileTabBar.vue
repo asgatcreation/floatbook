@@ -14,15 +14,18 @@ import {
 
 /**
  * Bottom navigation for phones, where the sidebar is tucked away. The middle button is
- * the one an agent presses all day. Hidden on the entry screen itself, which has its
- * own save bar at the bottom.
+ * the one an agent presses all day. Hidden on the entry and end-of-day screens, which have
+ * their own action bar at the bottom.
  */
 const page = usePage();
 const { can, tenant } = useTenant();
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 const { setOpenMobile } = useSidebar();
 
-const hidden = computed(() => page.component === 'transactions/Create');
+// Screens with their own action bar at the bottom.
+const hidden = computed(() =>
+    ['transactions/Create', 'reconciliation/Show'].includes(page.component),
+);
 const openReversals = computed(() => tenant.value?.open_reversals ?? 0);
 
 const tab =

@@ -11,6 +11,7 @@ use App\Models\Outlet;
 use App\Models\User;
 use App\Support\Audit;
 use App\Support\Ledger\Accounts;
+use App\Support\Ledger\DayLocks;
 use App\Support\Ledger\Ledger;
 use App\Support\Money\Money;
 use Carbon\CarbonImmutable;
@@ -23,7 +24,12 @@ use Illuminate\Validation\ValidationException;
  */
 class Expenses
 {
-    public function __construct(private Ledger $ledger, private Accounts $accounts, private Audit $audit) {}
+    public function __construct(
+        private Ledger $ledger,
+        private Accounts $accounts,
+        private Audit $audit,
+        private DayLocks $days,
+    ) {}
 
     public function record(
         Membership $by,
@@ -91,6 +97,8 @@ class Expenses
             if ($fresh->isVoided()) {
                 throw ValidationException::withMessages(['reason' => 'This expense has already been voided.']);
             }
+
+            $this->days->assertOpen($fresh->outlet_id, $fresh->business_date, 'reason');
 
             $reversal = $fresh->journalEntry !== null
                 ? $this->ledger->reverse($fresh->journalEntry, 'Voided: '.$reason, $fresh)

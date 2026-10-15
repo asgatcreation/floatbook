@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import {
+    Calculator,
     FileSpreadsheet,
     HandCoins,
     LayoutGrid,
@@ -36,6 +37,7 @@ import { index as expensesIndex } from '@/routes/expenses';
 import { index as floatIndex } from '@/routes/float';
 import { index as imports } from '@/routes/imports';
 import { index as outlets } from '@/routes/outlets';
+import { index as reconciliationIndex } from '@/routes/reconciliation';
 import { index as reversals } from '@/routes/reversals';
 import { index as staff } from '@/routes/staff';
 import {
@@ -56,6 +58,12 @@ const mainNavItems = computed<NavItem[]>(() =>
             show: true,
         },
         { title: 'Float', href: floatIndex(), icon: Wallet, show: true },
+        {
+            title: 'End of day',
+            href: reconciliationIndex(),
+            icon: Calculator,
+            show: true,
+        },
         {
             title: 'Expenses',
             href: expensesIndex(),
