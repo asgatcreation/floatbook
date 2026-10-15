@@ -36,7 +36,7 @@ test('an agent can open the entry screen and save a transaction', function () {
     $this->actingAs($this->agent->user)->get(route('transactions.create'))->assertOk()
         ->assertInertia(fn ($page) => $page->component('transactions/Create')
             ->has('outlets', 1)->where('outlets.0.name', 'Ketu Main')
-            ->has('providers', 3)->has('rules'));
+            ->has('outlets.0.terminals', 3)->where('outlets.0.terminals.0.label', 'Moniepoint POS')->has('rules'));
 
     $this->post(route('transactions.store'), payload($this, ['reference' => '2209447188']))->assertRedirect()->assertSessionHasNoErrors();
 
@@ -154,12 +154,6 @@ test('owners can edit charge rules; overlapping bands are refused', function () 
 
     $this->actingAs($this->agent->user)->post(route('transactions.store'), payload($this, ['type' => 'transfer']));
     expect(tenancy()->runAs($this->business, fn () => Transaction::query()->value('charge')))->toBe(15_000);
-});
-
-test('adding a provider gives every outlet a wallet for it', function () {
-    $this->actingAs($this->owner)->post(route('providers.store'), ['name' => 'Paystack Terminal', 'color' => '#0BA4DB'])->assertSessionHasNoErrors();
-
-    $this->get(route('float.index'))->assertInertia(fn ($page) => $page->has('outlets.0.wallets', 4)->has('outlets.1.wallets', 4));
 });
 
 test('entries synced from an offline phone keep the time they were recorded', function () {

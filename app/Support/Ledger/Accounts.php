@@ -7,6 +7,7 @@ use App\Models\LedgerAccount;
 use App\Models\Outlet;
 use App\Models\OutletWallet;
 use App\Models\Provider;
+use App\Models\Terminal;
 use App\Support\Tenancy\CurrentBusiness;
 
 /**
@@ -37,30 +38,58 @@ class Accounts
         return $this->forOutlet($outlet, LedgerAccountType::CashDrawer);
     }
 
-    public function wallet(Outlet|string $outlet, Provider|string $provider): LedgerAccount
+    /**
+     * The ledger account behind a terminal: the wallet it pays into.
+     */
+    public function forTerminal(Terminal|string $terminal): LedgerAccount
     {
-        $outletId = $outlet instanceof Outlet ? $outlet->id : $outlet;
-        $providerId = $provider instanceof Provider ? $provider->id : $provider;
+        $walletId = $terminal instanceof Terminal
+            ? $terminal->outlet_wallet_id
+            : Terminal::query()->whereKey($terminal)->value('outlet_wallet_id');
 
-        $wallet = OutletWallet::query()->with('account')
-            ->where('outlet_id', $outletId)->where('provider_id', $providerId)->first();
+        return $this->cache['wallet|'.$walletId] ??= OutletWallet::query()->with('account')->whereKey($walletId)->firstOrFail()->account;
+    }
 
-        if ($wallet !== null) {
-            return $wallet->account;
-        }
+    /**
+     * A new wallet (with its own ledger account) at an outlet with a provider.
+     */
+    public function openWallet(Outlet $outlet, Provider $provider, ?string $name = null): OutletWallet
+    {
+        $account = LedgerAccount::query()->create([
+            'type' => LedgerAccountType::ProviderWallet,
+            'outlet_id' => $outlet->id,
+            'provider_id' => $provider->id,
+            'name' => "{$outlet->name} · ".($name ?? "{$provider->name} wallet"),
+        ]);
 
-        $outlet = $outlet instanceof Outlet ? $outlet : Outlet::query()->findOrFail($outletId);
-        $provider = $provider instanceof Provider ? $provider : Provider::query()->findOrFail($providerId);
-
-        $account = $this->find(LedgerAccountType::ProviderWallet, $outlet->id, $provider->id, "{$outlet->name} · {$provider->name} wallet");
-
-        OutletWallet::query()->create([
+        return OutletWallet::query()->create([
             'outlet_id' => $outlet->id,
             'provider_id' => $provider->id,
             'ledger_account_id' => $account->id,
+            'name' => $name,
         ]);
+    }
 
-        return $account;
+    /**
+     * Make sure the outlet has at least one terminal for the provider; the first one gets
+     * its own wallet and is named after the provider ("Moniepoint POS").
+     */
+    public function ensureTerminal(Outlet $outlet, Provider $provider): Terminal
+    {
+        $existing = Terminal::query()->where('outlet_id', $outlet->id)->where('provider_id', $provider->id)->orderBy('created_at')->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $wallet = $this->openWallet($outlet, $provider);
+
+        return Terminal::query()->create([
+            'outlet_id' => $outlet->id,
+            'provider_id' => $provider->id,
+            'outlet_wallet_id' => $wallet->id,
+            'name' => "{$provider->name} POS",
+        ]);
     }
 
     public function headOffice(): LedgerAccount
@@ -74,7 +103,7 @@ class Accounts
     }
 
     /**
-     * Create every account an outlet needs, including a wallet per active provider.
+     * Create every account an outlet needs, and a terminal (with its wallet) per active provider.
      */
     public function setUpOutlet(Outlet $outlet): void
     {
@@ -85,7 +114,7 @@ class Accounts
         }
 
         foreach (Provider::query()->active()->get() as $provider) {
-            $this->wallet($outlet, $provider);
+            $this->ensureTerminal($outlet, $provider);
         }
     }
 

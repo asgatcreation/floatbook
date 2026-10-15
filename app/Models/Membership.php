@@ -83,6 +83,41 @@ class Membership extends Model
         );
     }
 
+    /**
+     * Terminals this member is in charge of. None means any terminal at their outlets.
+     *
+     * @return BelongsToMany<Terminal, $this>
+     */
+    public function terminals(): BelongsToMany
+    {
+        return $this->belongsToMany(Terminal::class)->withPivot('business_id');
+    }
+
+    /**
+     * @param  iterable<string>  $terminalIds
+     */
+    public function syncTerminals(iterable $terminalIds): void
+    {
+        $this->terminals()->sync(
+            collect($terminalIds)->mapWithKeys(fn (string $id) => [$id => ['business_id' => $this->business_id]])->all(),
+        );
+    }
+
+    /**
+     * Whether this member may record on the terminal: it must be at one of their outlets,
+     * and if they have been given specific terminals, it must be one of those.
+     */
+    public function canUseTerminal(Terminal $terminal): bool
+    {
+        if (! $this->coversOutlet($terminal->outlet_id)) {
+            return false;
+        }
+
+        $assigned = $this->terminals->where('outlet_id', $terminal->outlet_id);
+
+        return $assigned->isEmpty() || $assigned->contains('id', $terminal->id);
+    }
+
     public function isActive(): bool
     {
         return $this->status === MembershipStatus::Active;

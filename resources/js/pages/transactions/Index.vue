@@ -34,6 +34,7 @@ type Row = {
     customer_name: string | null;
     customer_phone: string | null;
     provider: { name: string; color: string } | null;
+    terminal: string | null;
     outlet: string | null;
     agent: string | null;
     occurred_at: string;
@@ -352,7 +353,9 @@ function pageLabel(label: string): string {
                                 class="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground"
                             >
                                 <ProviderDot :color="r.provider?.color" />
-                                <span>{{ r.provider?.name }}</span>
+                                <span>{{
+                                    r.terminal ?? r.provider?.name
+                                }}</span>
                                 <span
                                     >·
                                     {{

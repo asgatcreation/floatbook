@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
-import { MapPin, Pencil, Plus, Store, Users } from '@lucide/vue';
+import { CreditCard, MapPin, Pencil, Plus, Store, Users } from '@lucide/vue';
 import { ref } from 'vue';
 import OutletController from '@/actions/App/Http/Controllers/OutletController';
 import InputError from '@/components/InputError.vue';
 import PageHeader from '@/components/PageHeader.vue';
+import ProviderDot from '@/components/ProviderDot.vue';
 import StatusPill from '@/components/StatusPill.vue';
+import TerminalDialog from '@/components/TerminalDialog.vue';
+import type { TerminalRow } from '@/components/TerminalDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -28,13 +31,23 @@ type Outlet = {
     address: string | null;
     is_active: boolean;
     staff_count: number;
+    terminals: TerminalRow[];
+    wallets: {
+        id: string;
+        provider_id: string;
+        label: string;
+        terminals: string;
+    }[];
 };
 
 defineOptions({
     layout: { breadcrumbs: [{ title: 'Outlets', href: index() }] },
 });
 
-defineProps<{ outlets: Outlet[] }>();
+defineProps<{
+    outlets: Outlet[];
+    providers: { id: string; name: string; color: string }[];
+}>();
 
 const dialogOpen = ref(false);
 const editing = ref<Outlet | null>(null);
@@ -47,6 +60,20 @@ function openCreate(): void {
 function openEdit(outlet: Outlet): void {
     editing.value = outlet;
     dialogOpen.value = true;
+}
+
+// Terminals: add one to an outlet, or edit one.
+const terminalOpen = ref(false);
+const terminalOutlet = ref<Outlet | null>(null);
+const terminalEditing = ref<TerminalRow | null>(null);
+
+function openTerminal(
+    outlet: Outlet,
+    terminal: TerminalRow | null = null,
+): void {
+    terminalOutlet.value = outlet;
+    terminalEditing.value = terminal;
+    terminalOpen.value = true;
 }
 </script>
 
@@ -119,6 +146,66 @@ function openEdit(outlet: Outlet): void {
                         }}
                     </p>
                 </div>
+                <!-- Terminals -->
+                <div class="rounded-xl border">
+                    <p
+                        class="flex items-center gap-1.5 border-b px-3 py-2 text-xs font-medium text-muted-foreground"
+                    >
+                        <CreditCard class="size-3.5" /> Terminals
+                    </p>
+                    <ul class="divide-y">
+                        <li
+                            v-for="t in outlet.terminals"
+                            :key="t.id"
+                            class="flex items-center gap-2 px-3 py-2 text-sm"
+                            :class="{ 'opacity-60': !t.is_active }"
+                        >
+                            <ProviderDot :color="t.provider.color" />
+                            <span class="min-w-0 flex-1 leading-tight">
+                                <span class="block truncate font-medium">{{
+                                    t.name
+                                }}</span>
+                                <span
+                                    class="block truncate text-xs text-muted-foreground"
+                                    >{{
+                                        [
+                                            // "Moniepoint POS" already says Moniepoint.
+                                            t.name
+                                                .toLowerCase()
+                                                .includes(
+                                                    t.provider.name.toLowerCase(),
+                                                )
+                                                ? null
+                                                : t.provider.name,
+                                            t.terminal_code,
+                                            t.is_active ? null : 'switched off',
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ')
+                                    }}</span
+                                >
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="size-8"
+                                :aria-label="`Edit ${t.name}`"
+                                @click="openTerminal(outlet, t)"
+                            >
+                                <Pencil class="size-3.5" />
+                            </Button>
+                        </li>
+                    </ul>
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-1.5 border-t px-3 py-2 text-sm font-medium hover:bg-muted"
+                        :data-test="`add-terminal-${outlet.code}`"
+                        @click="openTerminal(outlet)"
+                    >
+                        <Plus class="size-4" /> Add terminal
+                    </button>
+                </div>
+
                 <div class="mt-auto">
                     <Button
                         variant="outline"
@@ -126,7 +213,7 @@ function openEdit(outlet: Outlet): void {
                         :aria-label="`Edit ${outlet.name}`"
                         @click="openEdit(outlet)"
                     >
-                        <Pencil class="size-4" /> Edit
+                        <Pencil class="size-4" /> Edit outlet
                     </Button>
                 </div>
             </li>
@@ -217,4 +304,12 @@ function openEdit(outlet: Outlet): void {
             </Form>
         </DialogContent>
     </Dialog>
+
+    <TerminalDialog
+        v-if="terminalOutlet"
+        v-model:open="terminalOpen"
+        :outlet="terminalOutlet"
+        :providers="providers"
+        :terminal="terminalEditing"
+    />
 </template>

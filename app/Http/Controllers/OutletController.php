@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Outlet;
+use App\Models\OutletWallet;
+use App\Models\Provider;
+use App\Models\Terminal;
 use App\Support\Audit;
 use App\Support\Tenancy\CurrentBusiness;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +27,30 @@ class OutletController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'address', 'is_active']);
 
-        return Inertia::render('outlets/Index', ['outlets' => $outlets]);
+        $terminals = Terminal::query()->with(['provider:id,name,color', 'wallet.provider:id,name'])
+            ->withCount('members')->orderBy('name')->get()->groupBy('outlet_id');
+        $wallets = OutletWallet::query()->with(['provider:id,name', 'terminals:id,outlet_wallet_id,name'])->get()->groupBy('outlet_id');
+
+        return Inertia::render('outlets/Index', [
+            'outlets' => $outlets->map(fn (Outlet $outlet) => [
+                ...$outlet->only(['id', 'name', 'code', 'address', 'is_active', 'staff_count']),
+                'terminals' => ($terminals[$outlet->id] ?? collect())->map(fn (Terminal $t) => [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'terminal_code' => $t->terminal_code,
+                    'serial_number' => $t->serial_number,
+                    'is_active' => $t->is_active,
+                    'provider' => ['id' => $t->provider_id, 'name' => $t->provider->name, 'color' => $t->provider->color],
+                    'wallet' => $t->wallet->label(),
+                    'staff_count' => $t->members_count,
+                ])->values(),
+                'wallets' => ($wallets[$outlet->id] ?? collect())->map(fn (OutletWallet $w) => [
+                    'id' => $w->id, 'provider_id' => $w->provider_id, 'label' => $w->label(),
+                    'terminals' => $w->terminals->pluck('name')->join(' and '),
+                ])->values(),
+            ]),
+            'providers' => Provider::query()->active()->get(['id', 'name', 'color']),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

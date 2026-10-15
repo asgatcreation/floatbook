@@ -27,13 +27,24 @@ import { create, index } from '@/routes/transactions';
 import { useBusinessTime } from '@/lib/dates';
 
 const { timeZone } = useBusinessTime();
+type Terminal = {
+    id: string;
+    name: string;
+    label: string;
+    code: string | null;
+    provider_id: string;
+    provider: { name: string; color: string };
+    wallet_id: string;
+    wallet_label: string;
+};
 type Outlet = {
     id: string;
     name: string;
     cash: number;
+    terminals: Terminal[];
+    /** Balance per wallet; terminals on the same account share one. */
     wallets: Record<string, number>;
 };
-type Provider = { id: string; name: string; color: string };
 type TypeOption = {
     value: string;
     label: string;
@@ -48,6 +59,7 @@ type Recent = {
     status: string;
     voided: boolean;
     provider: { name: string; color: string } | null;
+    terminal: string | null;
     occurred_at: string;
 };
 
@@ -62,7 +74,7 @@ defineOptions({
 
 const props = defineProps<{
     outlets: Outlet[];
-    providers: Provider[];
+    lastTerminalId: string | null;
     types: TypeOption[];
     rules: Rule[];
     recent: Recent[];
@@ -76,8 +88,17 @@ const errors = computed(() => ({
 }));
 
 // ---- Form state -------------------------------------------------------------
-const outletId = ref(props.outlets[0]?.id ?? '');
-const providerId = ref(props.providers[0]?.id ?? '');
+// Start where this person left off: the outlet and terminal they used last.
+const startOutlet =
+    props.outlets.find((o) =>
+        o.terminals.some((t) => t.id === props.lastTerminalId),
+    ) ?? props.outlets[0];
+const outletId = ref(startOutlet?.id ?? '');
+const terminalId = ref(
+    startOutlet?.terminals.find((t) => t.id === props.lastTerminalId)?.id ??
+        startOutlet?.terminals[0]?.id ??
+        '',
+);
 const type = ref(props.types[0]?.value ?? 'cash_withdrawal');
 const digits = ref('');
 const status = ref<'successful' | 'pending' | 'failed'>('successful');
@@ -93,9 +114,17 @@ const idempotencyKey = ref(crypto.randomUUID());
 const outlet = computed(() =>
     props.outlets.find((o) => o.id === outletId.value),
 );
-const provider = computed(() =>
-    props.providers.find((p) => p.id === providerId.value),
+const terminal = computed(() =>
+    outlet.value?.terminals.find((t) => t.id === terminalId.value),
 );
+const providerId = computed(() => terminal.value?.provider_id ?? '');
+
+// Switching outlet picks that outlet's first terminal.
+watch(outletId, () => {
+    if (!terminal.value) {
+        terminalId.value = outlet.value?.terminals[0]?.id ?? '';
+    }
+});
 const typeOption = computed(() =>
     props.types.find((t) => t.value === type.value),
 );
@@ -136,9 +165,9 @@ const cashAfter = computed(
 );
 const walletBefore = computed(
     () =>
-        (outlet.value?.wallets[providerId.value] ?? 0) +
+        (outlet.value?.wallets[terminal.value?.wallet_id ?? ''] ?? 0) +
         pendingEffects.value
-            .filter((e) => e?.provider_id === providerId.value)
+            .filter((e) => e?.wallet_id === terminal.value?.wallet_id)
             .reduce((sum, e) => sum + (e?.wallet ?? 0), 0),
 );
 const walletAfter = computed(
@@ -251,8 +280,7 @@ async function save(): Promise<void> {
         const result = await sync.save(
             {
                 idempotency_key: idempotencyKey.value,
-                outlet_id: outletId.value,
-                provider_id: providerId.value,
+                terminal_id: terminalId.value,
                 type: type.value,
                 amount: amount.value,
                 status: status.value,
@@ -268,6 +296,7 @@ async function save(): Promise<void> {
                 ? {
                       outlet_id: outletId.value,
                       provider_id: providerId.value,
+                      wallet_id: terminal.value?.wallet_id ?? '',
                       cash: change.value.cash,
                       wallet: change.value.wallet,
                   }
@@ -379,7 +408,10 @@ const statusTone = (s: string, voided: boolean) =>
                     <p
                         class="flex items-center gap-1.5 text-xs text-muted-foreground"
                     >
-                        <Wallet class="size-3.5" /> {{ provider?.name }} wallet
+                        <Wallet class="size-3.5" />
+                        <span class="truncate">{{
+                            terminal?.wallet_label
+                        }}</span>
                     </p>
                     <p
                         class="text-lg font-bold"
@@ -413,26 +445,58 @@ const statusTone = (s: string, voided: boolean) =>
             </fieldset>
 
             <fieldset>
-                <legend class="sr-only">Provider</legend>
-                <div class="flex gap-1.5">
+                <legend
+                    class="mb-1.5 text-xs font-medium text-muted-foreground"
+                >
+                    Terminal
+                </legend>
+                <div
+                    class="grid gap-1.5"
+                    :class="
+                        (outlet?.terminals.length ?? 0) > 2
+                            ? 'grid-cols-2 sm:grid-cols-3'
+                            : 'grid-cols-2'
+                    "
+                >
                     <label
-                        v-for="p in providers"
-                        :key="p.id"
-                        class="flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border bg-card px-2 text-sm font-semibold transition select-none has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+                        v-for="t in outlet?.terminals ?? []"
+                        :key="t.id"
+                        class="flex min-h-12 min-w-0 cursor-pointer items-center gap-2 rounded-xl border bg-card px-3 py-1.5 text-sm transition select-none has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+                        :data-test="`terminal-${t.name}`"
                     >
                         <input
-                            v-model="providerId"
+                            v-model="terminalId"
                             type="radio"
-                            name="provider"
-                            :value="p.id"
-                            :aria-label="p.name"
+                            name="terminal"
+                            :value="t.id"
+                            :aria-label="t.label"
                             class="sr-only"
                         />
-                        <ProviderDot :color="p.color" />
-                        {{ p.name }}
+                        <ProviderDot :color="t.provider.color" />
+                        <span class="min-w-0 leading-tight">
+                            <span class="block truncate font-semibold">{{
+                                t.name
+                            }}</span>
+                            <span
+                                v-if="t.label !== t.name || t.code"
+                                class="block truncate text-xs text-muted-foreground"
+                                >{{
+                                    [
+                                        t.label !== t.name
+                                            ? t.provider.name
+                                            : '',
+                                        t.code,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' · ')
+                                }}</span
+                            >
+                        </span>
                     </label>
                 </div>
-                <InputError :message="errors.provider_id" />
+                <InputError
+                    :message="errors.terminal_id ?? errors.provider_id"
+                />
             </fieldset>
 
             <!-- How much -->
@@ -676,7 +740,7 @@ const statusTone = (s: string, voided: boolean) =>
                             class="flex items-center gap-2 text-muted-foreground"
                         >
                             <Wallet class="size-4" />
-                            {{ provider?.name }} wallet
+                            {{ terminal?.wallet_label }}
                         </dt>
                         <dd class="text-right font-semibold">
                             <Amount
@@ -755,7 +819,7 @@ const statusTone = (s: string, voided: boolean) =>
                                 class="flex items-center gap-1.5 text-xs text-muted-foreground"
                             >
                                 <ProviderDot :color="r.provider?.color" />
-                                {{ r.provider?.name }} ·
+                                {{ r.terminal ?? r.provider?.name }} ·
                                 {{ time.format(new Date(r.occurred_at)) }}
                             </p>
                         </div>

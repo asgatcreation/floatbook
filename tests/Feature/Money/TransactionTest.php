@@ -55,7 +55,7 @@ function balances(object $test): array
 
         return [
             'cash' => $a->cash($o)->fresh()->balance,
-            'wallet' => $a->wallet($o, $test->provider)->fresh()->balance,
+            'wallet' => $a->forTerminal($a->ensureTerminal($o, $test->provider))->fresh()->balance,
             'charges' => -$a->forOutlet($o, LedgerAccountType::IncomeCharges)->fresh()->balance,
             'commissions' => -$a->forOutlet($o, LedgerAccountType::IncomeCommissions)->fresh()->balance,
             'fees' => $a->forOutlet($o, LedgerAccountType::ExpenseProviderFees)->fresh()->balance,

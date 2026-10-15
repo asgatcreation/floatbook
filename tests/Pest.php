@@ -4,7 +4,10 @@ use App\Enums\Role;
 use App\Models\Business;
 use App\Models\Membership;
 use App\Models\Outlet;
+use App\Models\Provider;
+use App\Models\Terminal;
 use App\Models\User;
+use App\Support\Ledger\Accounts;
 use App\Support\Tenancy\CurrentBusiness;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -76,4 +79,16 @@ function addMember(Business $business, Role $role, array $outlets = [], ?User $u
 function addOutlet(Business $business, array $attributes = []): Outlet
 {
     return tenancy()->runAs($business, fn () => Outlet::factory()->create($attributes));
+}
+
+/**
+ * The first terminal for a provider at an outlet (every outlet starts with one per provider).
+ */
+function terminalAt(Business $business, Outlet $outlet, ?Provider $provider = null): Terminal
+{
+    return tenancy()->runAs($business, function () use ($outlet, $provider) {
+        $provider ??= Provider::query()->where('slug', 'moniepoint')->sole();
+
+        return app(Accounts::class)->ensureTerminal($outlet, $provider);
+    });
 }

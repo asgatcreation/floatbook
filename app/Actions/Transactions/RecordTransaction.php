@@ -6,11 +6,11 @@ use App\Actions\Reversals\ReversalCases;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\Membership;
-use App\Models\Outlet;
-use App\Models\Provider;
+use App\Models\Terminal;
 use App\Models\Transaction;
 use App\Support\Audit;
 use App\Support\Charges\ChargeCalculator;
+use App\Support\Charges\ChargeQuote;
 use App\Support\Ledger\Ledger;
 use App\Support\Money\Money;
 use Carbon\CarbonImmutable;
@@ -37,11 +37,12 @@ class RecordTransaction
 
     /**
      * @param  array{
-     *     idempotency_key: string, outlet_id: string, provider_id: string, type: TransactionType,
+     *     idempotency_key: string, terminal_id?: ?string, outlet_id?: ?string, provider_id?: ?string, type: TransactionType,
      *     amount: Money, status: TransactionStatus, cash_paid_while_pending?: bool,
      *     customer_name?: ?string, customer_phone?: ?string, reference?: ?string, note?: ?string,
-     *     source?: string, client_recorded_at?: ?CarbonImmutable
-     * }  $data
+     *     source?: string, client_recorded_at?: ?CarbonImmutable,
+     *     quote?: ChargeQuote, replaces_transaction_id?: string, any_terminal?: bool
+     * }  $data  quote, replaces_transaction_id and any_terminal are only set internally, when an entry is moved to another terminal
      */
     public function handle(Membership $by, array $data): RecordedTransaction
     {
@@ -51,28 +52,23 @@ class RecordTransaction
             return new RecordedTransaction($existing, wasDuplicate: true);
         }
 
-        $outlet = Outlet::query()->active()->find($data['outlet_id']);
-        $provider = Provider::query()->where('is_active', true)->find($data['provider_id']);
-
-        if ($outlet === null || ! $by->coversOutlet($outlet)) {
-            throw ValidationException::withMessages(['outlet_id' => 'You can only record transactions for your own outlets.']);
-        }
-
-        if ($provider === null) {
-            throw ValidationException::withMessages(['provider_id' => 'Choose a provider.']);
-        }
+        $terminal = $this->terminal($by, $data);
+        $outlet = $terminal->outlet;
+        $provider = $terminal->provider;
 
         $type = $data['type'];
         $status = $data['status'];
         $cashPaid = $status === TransactionStatus::Pending && $type->canPayCashWhilePending() && ($data['cash_paid_while_pending'] ?? false);
-        $quote = $this->charges->quote($type, $provider->id, $outlet->id, $data['amount']);
+        $quote = $data['quote'] ?? $this->charges->quote($type, $provider->id, $outlet->id, $data['amount']);
         $occurredAt = $this->occurredAt($data);
 
         try {
-            $transaction = DB::transaction(function () use ($by, $data, $outlet, $provider, $type, $status, $cashPaid, $quote, $occurredAt): Transaction {
+            $transaction = DB::transaction(function () use ($by, $data, $terminal, $outlet, $type, $status, $cashPaid, $quote, $occurredAt): Transaction {
                 $transaction = Transaction::query()->create([
                     'outlet_id' => $outlet->id,
-                    'provider_id' => $provider->id,
+                    'provider_id' => $terminal->provider_id,
+                    'terminal_id' => $terminal->id,
+                    'replaces_transaction_id' => $data['replaces_transaction_id'] ?? null,
                     'membership_id' => $by->id,
                     'type' => $type,
                     'amount' => $data['amount']->kobo,
@@ -131,6 +127,42 @@ class RecordTransaction
     }
 
     /**
+     * The terminal the entry goes through. Older phones (and entries already waiting in an
+     * offline queue) send an outlet and provider instead; those use the member's first
+     * terminal for that provider at the outlet.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function terminal(Membership $by, array $data): Terminal
+    {
+        $query = Terminal::query()->active()->with(['outlet', 'provider'])
+            ->whereHas('outlet', fn ($q) => $q->where('is_active', true))
+            ->whereHas('provider', fn ($q) => $q->where('is_active', true));
+
+        if (! empty($data['terminal_id'])) {
+            $terminal = $query->whereKey($data['terminal_id'])->first();
+        } else {
+            $terminal = $query->where('outlet_id', $data['outlet_id'] ?? null)->where('provider_id', $data['provider_id'] ?? null)
+                ->orderBy('name')->get()
+                ->first(fn (Terminal $t) => $by->canUseTerminal($t));
+        }
+
+        if ($terminal === null) {
+            throw ValidationException::withMessages(['terminal_id' => 'Choose a terminal.']);
+        }
+
+        if (! $by->coversOutlet($terminal->outlet_id)) {
+            throw ValidationException::withMessages(['terminal_id' => 'You can only record transactions for your own outlets.']);
+        }
+
+        if (! ($data['any_terminal'] ?? false) && ! $by->canUseTerminal($terminal)) {
+            throw ValidationException::withMessages(['terminal_id' => 'That terminal is not one of yours.']);
+        }
+
+        return $terminal;
+    }
+
+    /**
      * Entries made offline keep the time they were actually recorded on the phone, as long
      * as it is believable (not in the future, at most 3 days old). Imported statement rows
      * keep the provider's time (up to a year back). Everything else happens "now".
@@ -144,6 +176,8 @@ class RecordTransaction
         $maxAge = match ($data['source'] ?? 'counter') {
             'offline_sync' => $now->subDays(3),
             'import' => $now->subYear(),
+            // A moved entry keeps the time of the one it replaces, whenever that was.
+            'correction' => $now->subYears(10),
             default => null,
         };
 

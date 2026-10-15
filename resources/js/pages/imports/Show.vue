@@ -43,6 +43,7 @@ const props = defineProps<{
         file: string;
         outlet: string;
         provider: { name: string; color: string };
+        terminal: string;
         status: 'uploaded' | 'mapped' | 'committed';
         headers: string[];
         mapping: Record<string, string | null> | null;
@@ -191,7 +192,7 @@ const otherLabel: Record<string, string> = {
                     class="flex items-center gap-1.5 text-sm text-muted-foreground"
                 >
                     <ProviderDot :color="statement.provider.color" />
-                    {{ statement.provider.name }} · {{ statement.outlet }} ·
+                    {{ statement.terminal }} · {{ statement.outlet }} ·
                     {{ statement.row_count }} rows
                 </p>
             </div>

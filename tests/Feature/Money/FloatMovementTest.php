@@ -30,7 +30,7 @@ function acct(object $test, string $what, ?object $outlet = null): string
 
         return match ($what) {
             'cash' => $a->cash($outlet)->id,
-            'wallet' => $a->wallet($outlet, $test->provider)->id,
+            'wallet' => $a->forTerminal($a->ensureTerminal($outlet, $test->provider))->id,
             'head' => $a->headOffice()->id,
         };
     });

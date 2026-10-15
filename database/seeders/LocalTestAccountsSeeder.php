@@ -13,6 +13,7 @@ use App\Models\FloatMovement;
 use App\Models\Membership;
 use App\Models\Outlet;
 use App\Models\Provider;
+use App\Models\Terminal;
 use App\Models\User;
 use App\Support\Ledger\Accounts;
 use App\Support\Money\Money;
@@ -68,6 +69,18 @@ class LocalTestAccountsSeeder extends Seeder
                 $members[$key]->syncOutlets($outletIds);
             }
 
+            // A second Moniepoint machine at Ketu Main with its own balance, to try terminals.
+            if (! Terminal::query()->where('outlet_id', $ketu->id)->where('name', 'Terminal 2')->exists()) {
+                $moniepoint = Provider::query()->where('slug', 'moniepoint')->firstOrFail();
+                Terminal::query()->create([
+                    'outlet_id' => $ketu->id,
+                    'provider_id' => $moniepoint->id,
+                    'outlet_wallet_id' => app(Accounts::class)->openWallet($ketu, $moniepoint, 'Terminal 2 · Moniepoint')->id,
+                    'name' => 'Terminal 2',
+                    'terminal_code' => '2MPT0412',
+                ]);
+            }
+
             if (FloatMovement::query()->exists()) {
                 return; // Balances and sample transactions were already added on an earlier run.
             }
@@ -84,8 +97,8 @@ class LocalTestAccountsSeeder extends Seeder
 
             foreach ([$ketu, $ojota] as $outlet) {
                 $open($accounts->cash($outlet), 450_000);
-                $open($accounts->wallet($outlet, $providers['moniepoint']), 800_000);
-                $open($accounts->wallet($outlet, $providers['opay']), 350_000);
+                $open($accounts->forTerminal($accounts->ensureTerminal($outlet, $providers['moniepoint'])), 800_000);
+                $open($accounts->forTerminal($accounts->ensureTerminal($outlet, $providers['opay'])), 350_000);
             }
 
             $agent = ($members['agent'] ?? throw new RuntimeException('Agent account missing.'))->load('outlets');

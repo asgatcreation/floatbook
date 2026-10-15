@@ -1,6 +1,6 @@
 # Try FloatBook on your computer
 
-A guided tour of everything built so far (milestones 1–4). It takes about 15 minutes.
+A guided tour of everything built so far (milestones 1–5 plus terminals). It takes about 20 minutes.
 
 ## 1. Start it
 
@@ -18,6 +18,7 @@ To stop the app later, click the PowerShell window and press **Ctrl + C**.
 > If `composer` or `php` is "not recognized", close PowerShell and open a new one.
 > If the test accounts below don't work, run `php artisan db:seed --class=LocalTestAccountsSeeder`
 > in a second PowerShell window (it is safe to run more than once).
+> After pulling new code, run `php artisan migrate` once to update your database (your data is kept).
 
 ## 2. Log in
 
@@ -87,14 +88,32 @@ three providers and starter charge rules automatically.
 
 ## 8. Import a provider statement
 
-1. As the owner or supervisor, open **Statement imports** and upload a CSV or Excel export from
-   Moniepoint, OPay or Palmpay. If the columns aren't recognised you can pick them yourself.
+1. As the owner or supervisor, open **Statement imports**, choose the **terminal** the statement is for,
+   and upload a CSV or Excel export from the provider. If the columns aren't recognised you can pick
+   them yourself. Rows are checked only against that terminal's entries.
 2. FloatBook compares every row with what was recorded and sorts them into **Matched**,
    **Doesn't agree**, **Missing in FloatBook** (on the statement but nobody entered it) and
    **Only in FloatBook** (entered, but the provider has no record of it).
 3. Tick the _Missing in FloatBook_ rows you want and press **Add … to FloatBook**.
 
-## 9. Offline mode (the agent's phone)
+## 9. Several terminals in one shop
+
+1. As the **owner**, open **Outlets**. Each outlet lists its **Terminals**. Ketu Main already has
+   _Terminal 2_ (a second Moniepoint machine with its own balance).
+2. Press **Add terminal**: name it _Terminal 3_, pick **Moniepoint**, type its TID, and choose
+   **Same account as Terminal 2** (both machines pay into one account, so they share a balance).
+   A bank POS works too: add the bank first under **Settings → Charges & providers**.
+3. Open **Staff**, **Edit** the agent and tick **Terminal 2** and **Terminal 3** under
+   _Terminals they're in charge of_.
+4. Log in as the **agent** and open **New transaction**: only those two terminals show, and the
+   one used last is already picked. Record a withdrawal on Terminal 2.
+5. Oops, it was Terminal 3. Open the entry and press **Wrong terminal?** Pick Terminal 3, give a
+   reason, and **Move entry**. The original stays, marked as moved; the same transaction appears on
+   Terminal 3 at the same time with the same charge. Nothing is deleted. Agents can do this for
+   their own entries on the same day; after that a supervisor or the owner has to.
+6. **Float** shows each balance with the terminals that pay into it.
+
+## 10. Offline mode (the agent's phone)
 
 Offline mode only works on the built app, not while `npm run dev` is running:
 

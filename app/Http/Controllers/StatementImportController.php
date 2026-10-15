@@ -6,9 +6,9 @@ use App\Actions\Statements\StatementImports;
 use App\Actions\Transactions\RecordTransaction;
 use App\Enums\TransactionType;
 use App\Models\Outlet;
-use App\Models\Provider;
 use App\Models\StatementImport;
 use App\Models\StatementImportRow;
+use App\Models\Terminal;
 use App\Models\Transaction;
 use App\Support\Statements\StatementAdapter;
 use App\Support\Tenancy\CurrentBusiness;
@@ -27,7 +27,7 @@ class StatementImportController extends Controller
         $me = $this->tenancy->membershipOrFail();
 
         return Inertia::render('imports/Index', [
-            'imports' => StatementImport::query()->with(['outlet:id,name', 'provider:id,name,color', 'uploader:id,name'])
+            'imports' => StatementImport::query()->with(['outlet:id,name', 'provider:id,name,color', 'terminal.provider:id,name', 'uploader:id,name'])
                 ->latest()->limit(30)->get()
                 ->filter(fn (StatementImport $i) => $me->coversOutlet($i->outlet_id))
                 ->map(fn (StatementImport $i) => [
@@ -35,13 +35,19 @@ class StatementImportController extends Controller
                     'file' => $i->original_filename,
                     'outlet' => $i->outlet->name,
                     'provider' => $i->provider->only(['name', 'color']),
+                    'terminal' => $i->terminal->label(),
                     'status' => $i->status,
                     'rows' => $i->row_count,
                     'uploaded_by' => $i->uploader?->name,
                     'created_at' => $i->created_at?->toIso8601String(),
                 ])->values(),
             'outlets' => Outlet::query()->active()->orderBy('name')->get(['id', 'name'])->filter(fn (Outlet $o) => $me->coversOutlet($o))->values(),
-            'providers' => Provider::query()->active()->get(['id', 'name', 'color']),
+            'terminals' => Terminal::query()->active()->with('provider:id,name,color')->orderBy('name')->get()
+                ->filter(fn (Terminal $t) => $me->coversOutlet($t->outlet_id) && $t->provider->is_active)
+                ->map(fn (Terminal $t) => [
+                    'id' => $t->id, 'outlet_id' => $t->outlet_id, 'label' => $t->label(), 'code' => $t->terminal_code,
+                    'color' => $t->provider->color,
+                ])->values(),
         ]);
     }
 
@@ -51,15 +57,14 @@ class StatementImportController extends Controller
         $businessId = $this->tenancy->id();
 
         $validated = $request->validate([
-            'outlet_id' => ['required', Rule::exists('outlets', 'id')->where('business_id', $businessId)],
-            'provider_id' => ['required', Rule::exists('providers', 'id')->where('business_id', $businessId)],
+            'terminal_id' => ['required', Rule::exists('terminals', 'id')->where('business_id', $businessId)],
             'file' => ['required', 'file', 'max:5120', 'mimes:csv,txt,xlsx'],
-        ], ['file.mimes' => 'Upload a .csv or .xlsx file.', 'file.max' => 'The file must be smaller than 5 MB.']);
+        ], ['terminal_id.required' => 'Choose the terminal this statement is for.', 'file.mimes' => 'Upload a .csv or .xlsx file.', 'file.max' => 'The file must be smaller than 5 MB.']);
 
-        $outlet = Outlet::query()->whereKey($request->string('outlet_id')->value())->firstOrFail();
-        abort_unless($me->coversOutlet($outlet), 403);
+        $terminal = Terminal::query()->with(['provider', 'outlet'])->whereKey($request->string('terminal_id')->value())->firstOrFail();
+        abort_unless($me->coversOutlet($terminal->outlet_id), 403);
 
-        $import = $this->imports->upload($me, $outlet, Provider::query()->whereKey($request->string('provider_id')->value())->firstOrFail(), $request->file('file'));
+        $import = $this->imports->upload($me, $terminal, $request->file('file'));
 
         return redirect()->route('imports.show', $import);
     }
@@ -67,7 +72,7 @@ class StatementImportController extends Controller
     public function show(StatementImport $import): Response
     {
         $this->authorizeImport($import);
-        $import->load(['outlet:id,name', 'provider:id,name,color']);
+        $import->load(['outlet:id,name', 'provider:id,name,color', 'terminal.provider:id,name']);
 
         $rows = $import->rows()->with('transaction:id,reference,amount,occurred_at,type')->get();
 
@@ -77,6 +82,7 @@ class StatementImportController extends Controller
                 'file' => $import->original_filename,
                 'outlet' => $import->outlet->name,
                 'provider' => $import->provider->only(['name', 'color']),
+                'terminal' => $import->terminal->label(),
                 'status' => $import->status,
                 'headers' => $import->headers,
                 'mapping' => $import->column_mapping,

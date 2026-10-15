@@ -12,6 +12,7 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\ReversalController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StatementImportController;
+use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,8 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::get('outlets', [OutletController::class, 'index'])->can('manage_outlets')->name('outlets.index');
     Route::post('outlets', [OutletController::class, 'store'])->can('manage_outlets')->name('outlets.store');
     Route::patch('outlets/{outlet}', [OutletController::class, 'update'])->can('manage_outlets')->name('outlets.update');
+    Route::post('outlets/{outlet}/terminals', [TerminalController::class, 'store'])->can('manage_outlets')->name('terminals.store');
+    Route::patch('terminals/{terminal}', [TerminalController::class, 'update'])->can('manage_outlets')->name('terminals.update');
 
     Route::get('staff', [StaffController::class, 'index'])->name('staff.index');
     Route::patch('staff/{membership}', [StaffController::class, 'update'])->name('staff.update');
@@ -60,6 +63,7 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
     Route::post('transactions/{transaction}/resolve', [TransactionController::class, 'resolve'])->can('record_transactions')->name('transactions.resolve');
     Route::post('transactions/{transaction}/void', [TransactionController::class, 'void'])->can('void_transactions')->name('transactions.void');
+    Route::post('transactions/{transaction}/move', [TransactionController::class, 'move'])->can('record_transactions')->name('transactions.move');
 
     Route::middleware('can:import_statements')->group(function () {
         Route::get('imports', [StatementImportController::class, 'index'])->name('imports.index');

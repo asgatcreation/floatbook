@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * One customer transaction at the counter. Amounts are kobo. The charge, fee and
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $business_id
  * @property string $outlet_id
  * @property string $provider_id
+ * @property string $terminal_id
+ * @property string|null $replaces_transaction_id
  * @property string $membership_id
  * @property TransactionType $type
  * @property int $amount
@@ -48,10 +51,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $updated_at
  * @property-read Outlet $outlet
  * @property-read Provider $provider
+ * @property-read Terminal $terminal
+ * @property-read Transaction|null $replaces
+ * @property-read Transaction|null $replacement
  * @property-read Membership $membership
  */
 #[Fillable([
-    'outlet_id', 'provider_id', 'membership_id', 'type', 'amount', 'charge', 'charge_collected_via',
+    'outlet_id', 'provider_id', 'terminal_id', 'replaces_transaction_id', 'membership_id', 'type', 'amount', 'charge', 'charge_collected_via',
     'provider_fee', 'commission', 'status', 'cash_paid_while_pending', 'customer_name', 'customer_phone',
     'reference', 'note', 'source', 'idempotency_key', 'client_recorded_at', 'occurred_at', 'business_date',
 ])]
@@ -90,6 +96,34 @@ class Transaction extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    /**
+     * @return BelongsTo<Terminal, $this>
+     */
+    public function terminal(): BelongsTo
+    {
+        return $this->belongsTo(Terminal::class);
+    }
+
+    /**
+     * The entry this one replaced, when it was moved from the wrong terminal.
+     *
+     * @return BelongsTo<Transaction, $this>
+     */
+    public function replaces(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'replaces_transaction_id');
+    }
+
+    /**
+     * The entry that took this one's place on the right terminal.
+     *
+     * @return HasOne<Transaction, $this>
+     */
+    public function replacement(): HasOne
+    {
+        return $this->hasOne(Transaction::class, 'replaces_transaction_id');
     }
 
     /**

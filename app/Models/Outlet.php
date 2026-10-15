@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A physical location (shop, kiosk, market stall) where agents serve customers.
@@ -35,7 +36,7 @@ class Outlet extends Model
 
     protected static function booted(): void
     {
-        // Cash drawer, income/expense accounts and a wallet per active provider.
+        // Cash drawer, income/expense accounts, and a terminal and wallet per active provider.
         static::created(fn (Outlet $outlet) => app(Accounts::class)->setUpOutlet($outlet));
     }
 
@@ -52,6 +53,22 @@ class Outlet extends Model
     public function memberships(): BelongsToMany
     {
         return $this->belongsToMany(Membership::class)->withPivot('business_id');
+    }
+
+    /**
+     * @return HasMany<Terminal, $this>
+     */
+    public function terminals(): HasMany
+    {
+        return $this->hasMany(Terminal::class);
+    }
+
+    /**
+     * @return HasMany<OutletWallet, $this>
+     */
+    public function wallets(): HasMany
+    {
+        return $this->hasMany(OutletWallet::class);
     }
 
     /**

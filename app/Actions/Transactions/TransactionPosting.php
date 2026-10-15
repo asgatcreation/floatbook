@@ -27,7 +27,7 @@ class TransactionPosting
     public function completionLines(Transaction $t, bool $cashAlreadyPaid = false): array
     {
         $cash = $this->accounts->cash($t->outlet_id);
-        $wallet = $this->accounts->wallet($t->outlet_id, $t->provider_id);
+        $wallet = $this->accounts->forTerminal($t->terminal_id);
         $pending = $this->accounts->forOutlet($t->outlet_id, LedgerAccountType::PendingSettlement);
 
         $chargeToCash = $t->charge_collected_via === 'cash' ? $t->charge : 0;

@@ -20,6 +20,8 @@ export type QueuedEntry = {
     effect: {
         outlet_id: string;
         provider_id: string;
+        /** The terminal's wallet; missing on entries saved before terminals existed. */
+        wallet_id?: string;
         cash: number;
         wallet: number;
     } | null;

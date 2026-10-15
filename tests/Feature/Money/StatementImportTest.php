@@ -52,7 +52,7 @@ CSV;
 
 test('uploading a statement suggests the column mapping', function () {
     $this->actingAs($this->owner)->post(route('imports.store'), [
-        'outlet_id' => $this->outlet->id, 'provider_id' => $this->provider->id, 'file' => statementFile(SAMPLE_STATEMENT),
+        'terminal_id' => terminalAt($this->business, $this->outlet, $this->provider)->id, 'file' => statementFile(SAMPLE_STATEMENT),
     ])->assertRedirect();
 
     $import = tenancy()->runAs($this->business, fn () => StatementImport::query()->sole());
@@ -71,7 +71,7 @@ test('every row is matched, flagged or listed as missing', function () {
     recordAt($this, '2026-10-14 13:30', 3_000, 'NOT-ON-STATEMENT');    // only in FloatBook, within the statement's hours
 
     $this->actingAs($this->owner)->post(route('imports.store'), [
-        'outlet_id' => $this->outlet->id, 'provider_id' => $this->provider->id, 'file' => statementFile(SAMPLE_STATEMENT),
+        'terminal_id' => terminalAt($this->business, $this->outlet, $this->provider)->id, 'file' => statementFile(SAMPLE_STATEMENT),
     ]);
     $import = tenancy()->runAs($this->business, fn () => StatementImport::query()->sole());
 
@@ -95,7 +95,7 @@ test('every row is matched, flagged or listed as missing', function () {
 
 test('adding the missing rows records them once, at the statement time', function () {
     $this->actingAs($this->owner)->post(route('imports.store'), [
-        'outlet_id' => $this->outlet->id, 'provider_id' => $this->provider->id, 'file' => statementFile(SAMPLE_STATEMENT),
+        'terminal_id' => terminalAt($this->business, $this->outlet, $this->provider)->id, 'file' => statementFile(SAMPLE_STATEMENT),
     ]);
     $import = tenancy()->runAs($this->business, fn () => StatementImport::query()->sole());
     $this->post(route('imports.map', $import), ['mapping' => $import->column_mapping]);
@@ -115,7 +115,7 @@ test('adding the missing rows records them once, at the statement time', functio
 
     // The same statement uploaded again: its rows are now duplicates or matches, nothing new to add.
     $this->post(route('imports.store'), [
-        'outlet_id' => $this->outlet->id, 'provider_id' => $this->provider->id, 'file' => statementFile(SAMPLE_STATEMENT),
+        'terminal_id' => terminalAt($this->business, $this->outlet, $this->provider)->id, 'file' => statementFile(SAMPLE_STATEMENT),
     ]);
     $second = tenancy()->runAs($this->business, fn () => StatementImport::query()->latest()->first());
     $this->post(route('imports.map', $second), ['mapping' => $second->column_mapping]);
@@ -132,7 +132,7 @@ test('Excel files are read too', function () {
     $writer->close();
 
     $this->actingAs($this->owner)->post(route('imports.store'), [
-        'outlet_id' => $this->outlet->id, 'provider_id' => $this->provider->id,
+        'terminal_id' => terminalAt($this->business, $this->outlet, $this->provider)->id,
         'file' => new UploadedFile($path, 'statement.xlsx', null, null, true),
     ])->assertRedirect();
 
@@ -146,7 +146,7 @@ test('Excel files are read too', function () {
 
 test('bad files are explained, not crashed on', function (string $name, string $content, string $error) {
     $this->actingAs($this->owner)->post(route('imports.store'), [
-        'outlet_id' => $this->outlet->id, 'provider_id' => $this->provider->id, 'file' => statementFile($content, $name),
+        'terminal_id' => terminalAt($this->business, $this->outlet, $this->provider)->id, 'file' => statementFile($content, $name),
     ])->assertSessionHasErrors(['file' => $error]);
 })->with([
     'header only' => ['empty.csv', "Date,Amount\n", 'The file has a header row but no transactions.'],
@@ -160,7 +160,7 @@ test('agents cannot import; supervisors only for their outlets', function () {
     $this->actingAs($this->agent->user)->get(route('imports.index'))->assertForbidden();
 
     $this->actingAs($supervisor->user)->post(route('imports.store'), [
-        'outlet_id' => $other->id, 'provider_id' => $this->provider->id, 'file' => statementFile(SAMPLE_STATEMENT),
+        'terminal_id' => terminalAt($this->business, $other, $this->provider)->id, 'file' => statementFile(SAMPLE_STATEMENT),
     ])->assertForbidden();
 });
 

@@ -6,10 +6,10 @@ use App\Actions\Transactions\RecordTransaction;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\Membership;
-use App\Models\Outlet;
 use App\Models\Provider;
 use App\Models\StatementImport;
 use App\Models\StatementImportRow;
+use App\Models\Terminal;
 use App\Models\Transaction;
 use App\Support\Audit;
 use App\Support\Money\Money;
@@ -28,7 +28,7 @@ use InvalidArgumentException;
 /**
  * Upload → map columns → match against FloatBook → add what's missing.
  *
- * Matching for each statement row (same outlet and provider):
+ * Matching for each statement row (against the same terminal's entries):
  *   1. same reference           → matched (or amount_mismatch if the amounts differ)
  *   2. same amount within 15 min → matched
  *   3. otherwise                → missing_in_floatbook
@@ -46,8 +46,10 @@ class StatementImports
         private Audit $audit,
     ) {}
 
-    public function upload(Membership $by, Outlet $outlet, Provider $provider, UploadedFile $file): StatementImport
+    public function upload(Membership $by, Terminal $terminal, UploadedFile $file): StatementImport
     {
+        $provider = $terminal->provider;
+
         try {
             $data = $this->reader->read($file->getRealPath(), $file->getClientOriginalExtension(), StatementImport::MAX_ROWS);
         } catch (InvalidArgumentException $e) {
@@ -60,10 +62,11 @@ class StatementImports
             throw ValidationException::withMessages(['file' => 'The file has a header row but no transactions.']);
         }
 
-        return DB::transaction(function () use ($by, $outlet, $provider, $file, $data): StatementImport {
+        return DB::transaction(function () use ($by, $terminal, $provider, $file, $data): StatementImport {
             $import = StatementImport::query()->create([
-                'outlet_id' => $outlet->id,
+                'outlet_id' => $terminal->outlet_id,
                 'provider_id' => $provider->id,
+                'terminal_id' => $terminal->id,
                 'original_filename' => mb_substr($file->getClientOriginalName(), 0, 200),
                 'status' => 'uploaded',
                 'headers' => $data['headers'],
@@ -83,7 +86,7 @@ class StatementImports
             }
 
             $this->audit->record('statement.uploaded', $import, after: [
-                'file' => $import->original_filename, 'rows' => $import->row_count, 'outlet' => $outlet->name, 'provider' => $provider->name,
+                'file' => $import->original_filename, 'rows' => $import->row_count, 'outlet' => $terminal->outlet->name, 'terminal' => $terminal->label(),
             ]);
 
             return $import;
@@ -110,12 +113,11 @@ class StatementImports
         $timezone = $this->tenancy->businessOrFail()->timezone;
         $rows = $import->rows()->get();
 
-        // Everything this outlet/provider recorded around the statement's dates, loaded once.
+        // Everything this terminal recorded around the statement's dates, loaded once.
         $parsed = $rows->map(fn (StatementImportRow $row) => $this->parse($row, $mapping, $timezone));
         $times = $parsed->pluck('occurred_at')->filter();
         $candidates = $times->isEmpty() ? collect() : Transaction::query()
-            ->where('outlet_id', $import->outlet_id)
-            ->where('provider_id', $import->provider_id)
+            ->where('terminal_id', $import->terminal_id)
             ->whereNull('voided_at')
             ->whereBetween('occurred_at', [$times->min()->subDay(), $times->max()->addDay()])
             ->get();
@@ -180,8 +182,9 @@ class StatementImports
             foreach ($rows as $row) {
                 $result = $record->handle($by, [
                     'idempotency_key' => $this->uuidFromHash($row->row_hash),
-                    'outlet_id' => $import->outlet_id,
-                    'provider_id' => $import->provider_id,
+                    'terminal_id' => $import->terminal_id,
+                    // Importing is a supervisor's job; it isn't limited to their own terminals.
+                    'any_terminal' => true,
                     'type' => $row->type !== null ? TransactionType::from($row->type) : $defaultType,
                     'amount' => Money::kobo((int) $row->amount),
                     'status' => TransactionStatus::Successful,
@@ -217,8 +220,7 @@ class StatementImports
         }
 
         return Transaction::query()
-            ->where('outlet_id', $import->outlet_id)
-            ->where('provider_id', $import->provider_id)
+            ->where('terminal_id', $import->terminal_id)
             ->whereNull('voided_at')
             ->where('status', TransactionStatus::Successful)
             ->whereBetween('occurred_at', [$rows->min('occurred_at'), $rows->max('occurred_at')])

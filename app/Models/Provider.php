@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Support\Ledger\Accounts;
 use App\Support\Tenancy\BelongsToBusiness;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -36,15 +35,6 @@ class Provider extends Model
         ['name' => 'OPay', 'slug' => 'opay', 'color' => '#14A37F'],
         ['name' => 'Palmpay', 'slug' => 'palmpay', 'color' => '#7A4BE0'],
     ];
-
-    protected static function booted(): void
-    {
-        // Every outlet gets a wallet for a newly added provider.
-        static::created(function (Provider $provider): void {
-            $accounts = app(Accounts::class);
-            Outlet::query()->each(fn (Outlet $outlet) => $accounts->wallet($outlet, $provider));
-        });
-    }
 
     protected function casts(): array
     {

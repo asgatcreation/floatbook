@@ -47,6 +47,8 @@ type Account = {
     balance: number;
     low_balance_threshold: number | null;
     is_low: boolean;
+    /** Wallets only: the terminals that pay into it. */
+    terminals?: string[];
 };
 type OutletFloat = {
     id: string;
@@ -466,7 +468,20 @@ const statusTone = (s: Movement['status']) =>
                         <span class="flex items-center gap-2 text-sm">
                             <ProviderDot :color="w.color" />
                             <Wallet class="size-3.5 text-muted-foreground" />
-                            {{ w.label }}
+                            <span class="min-w-0 leading-tight">
+                                {{ w.label }}
+                                <span
+                                    v-if="
+                                        w.terminals?.length &&
+                                        !(
+                                            w.terminals.length === 1 &&
+                                            w.terminals[0].includes(w.label)
+                                        )
+                                    "
+                                    class="block text-xs text-muted-foreground"
+                                    >{{ w.terminals.join(', ') }}</span
+                                >
+                            </span>
                             <StatusPill v-if="w.is_low" tone="warning"
                                 >Low</StatusPill
                             >

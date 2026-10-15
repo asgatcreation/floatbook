@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $business_id
  * @property string $outlet_id
  * @property string $provider_id
+ * @property string $terminal_id
  * @property string $original_filename
  * @property string $status
  * @property list<string> $headers
@@ -29,9 +30,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $updated_at
  * @property-read Outlet $outlet
  * @property-read Provider $provider
+ * @property-read Terminal $terminal
  * @property-read User|null $uploader
  */
-#[Fillable(['outlet_id', 'provider_id', 'original_filename', 'status', 'headers', 'column_mapping', 'row_count', 'uploaded_by'])]
+#[Fillable(['outlet_id', 'provider_id', 'terminal_id', 'original_filename', 'status', 'headers', 'column_mapping', 'row_count', 'uploaded_by'])]
 class StatementImport extends Model
 {
     use BelongsToBusiness, HasUlids;
@@ -70,6 +72,14 @@ class StatementImport extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    /**
+     * @return BelongsTo<Terminal, $this>
+     */
+    public function terminal(): BelongsTo
+    {
+        return $this->belongsTo(Terminal::class);
     }
 
     /**

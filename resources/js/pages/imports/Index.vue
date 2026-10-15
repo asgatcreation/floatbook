@@ -24,13 +24,20 @@ defineProps<{
         file: string;
         outlet: string;
         provider: { name: string; color: string };
+        terminal: string;
         status: 'uploaded' | 'mapped' | 'committed';
         rows: number;
         uploaded_by: string | null;
         created_at: string;
     }[];
     outlets: { id: string; name: string }[];
-    providers: { id: string; name: string; color: string }[];
+    terminals: {
+        id: string;
+        outlet_id: string;
+        label: string;
+        code: string | null;
+        color: string;
+    }[];
 }>();
 
 const statusText = {
@@ -76,43 +83,35 @@ const when = new Intl.DateTimeFormat('en-NG', {
                     </p>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="grid gap-2">
-                        <Label for="outlet">Outlet</Label>
-                        <select
-                            id="outlet"
-                            name="outlet_id"
-                            class="h-10 rounded-md border bg-transparent px-3 text-sm"
-                            required
+                <div class="grid gap-2">
+                    <Label for="terminal">Terminal</Label>
+                    <select
+                        id="terminal"
+                        name="terminal_id"
+                        class="h-10 rounded-md border bg-transparent px-3 text-sm"
+                        required
+                    >
+                        <optgroup
+                            v-for="o in outlets"
+                            :key="o.id"
+                            :label="o.name"
                         >
                             <option
-                                v-for="o in outlets"
-                                :key="o.id"
-                                :value="o.id"
+                                v-for="t in terminals.filter(
+                                    (t) => t.outlet_id === o.id,
+                                )"
+                                :key="t.id"
+                                :value="t.id"
                             >
-                                {{ o.name }}
+                                {{ t.label }}{{ t.code ? ` · ${t.code}` : '' }}
                             </option>
-                        </select>
-                        <InputError :message="errors.outlet_id" />
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="provider">Provider</Label>
-                        <select
-                            id="provider"
-                            name="provider_id"
-                            class="h-10 rounded-md border bg-transparent px-3 text-sm"
-                            required
-                        >
-                            <option
-                                v-for="p in providers"
-                                :key="p.id"
-                                :value="p.id"
-                            >
-                                {{ p.name }}
-                            </option>
-                        </select>
-                        <InputError :message="errors.provider_id" />
-                    </div>
+                        </optgroup>
+                    </select>
+                    <p class="text-xs text-muted-foreground">
+                        Each terminal has its own statement. Rows are checked
+                        against what was recorded on this terminal.
+                    </p>
+                    <InputError :message="errors.terminal_id" />
                 </div>
 
                 <label
@@ -201,7 +200,7 @@ const when = new Intl.DateTimeFormat('en-NG', {
                                 class="flex items-center gap-1.5 text-xs text-muted-foreground"
                             >
                                 <ProviderDot :color="i.provider.color" />
-                                {{ i.provider.name }} · {{ i.outlet }} ·
+                                {{ i.terminal }} · {{ i.outlet }} ·
                                 {{ i.rows }} rows ·
                                 {{ when.format(new Date(i.created_at))
                                 }}<template v-if="i.uploaded_by">

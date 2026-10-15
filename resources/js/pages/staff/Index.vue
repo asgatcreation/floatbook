@@ -46,6 +46,7 @@ type Member = {
     has_pin: boolean;
     last_active_at: string | null;
     outlets: OutletRef[];
+    terminals: { id: string; label: string }[];
     is_me: boolean;
     can_manage: boolean;
 };
@@ -65,6 +66,7 @@ const props = defineProps<{
     members: Member[];
     invitations: PendingInvitation[];
     outlets: OutletRef[];
+    terminals: { id: string; outlet_id: string; label: string }[];
     roles: RoleOption[];
 }>();
 
@@ -75,6 +77,18 @@ const dialogOpen = ref(false);
 const editing = ref<Member | null>(null);
 const selectedRole = ref<RoleValue>('agent');
 const selectedOutlets = ref<string[]>([]);
+const selectedTerminals = ref<string[]>([]);
+
+// Only terminals at the outlets ticked above can be assigned.
+const terminalChoices = computed(() =>
+    props.outlets
+        .filter((o) => selectedOutlets.value.includes(o.id))
+        .map((o) => ({
+            outlet: o,
+            terminals: props.terminals.filter((t) => t.outlet_id === o.id),
+        }))
+        .filter((group) => group.terminals.length > 0),
+);
 
 const selectedRoleOption = computed(() =>
     props.roles.find((role) => role.value === selectedRole.value),
@@ -95,6 +109,7 @@ function openEdit(member: Member): void {
     editing.value = member;
     selectedRole.value = member.role;
     selectedOutlets.value = member.outlets.map((outlet) => outlet.id);
+    selectedTerminals.value = member.terminals.map((t) => t.id);
     dialogOpen.value = true;
 }
 
@@ -242,6 +257,15 @@ function lastSeen(iso: string | null): string {
                                     : 'All outlets'
                             }}
                             · {{ lastSeen(member.last_active_at) }}
+                        </p>
+                        <p
+                            v-if="member.terminals.length"
+                            class="truncate text-xs text-muted-foreground"
+                        >
+                            In charge of
+                            {{
+                                member.terminals.map((t) => t.label).join(', ')
+                            }}
                         </p>
                     </div>
                     <div
@@ -420,6 +444,49 @@ function lastSeen(iso: string | null): string {
                     <InputError
                         :message="errors.outlet_ids ?? errors['outlet_ids.0']"
                     />
+                </fieldset>
+
+                <fieldset
+                    v-if="
+                        editing &&
+                        selectedRoleOption?.outlet_scoped &&
+                        terminalChoices.length
+                    "
+                    class="grid gap-2"
+                >
+                    <legend class="mb-1 text-sm font-medium">
+                        Terminals they're in charge of
+                    </legend>
+                    <p class="mb-1 text-xs text-muted-foreground">
+                        They'll only see these when recording. Leave all
+                        unticked to allow every terminal at their outlets.
+                    </p>
+                    <div
+                        v-for="group in terminalChoices"
+                        :key="group.outlet.id"
+                        class="grid gap-1.5"
+                    >
+                        <p
+                            v-if="terminalChoices.length > 1"
+                            class="text-xs font-semibold text-muted-foreground"
+                        >
+                            {{ group.outlet.name }}
+                        </p>
+                        <label
+                            v-for="t in group.terminals"
+                            :key="t.id"
+                            class="flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm"
+                        >
+                            <input
+                                v-model="selectedTerminals"
+                                type="checkbox"
+                                name="terminal_ids[]"
+                                :value="t.id"
+                                class="size-4 accent-[var(--primary)]"
+                            />
+                            {{ t.label }}
+                        </label>
+                    </div>
                 </fieldset>
 
                 <DialogFooter>

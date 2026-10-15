@@ -35,10 +35,15 @@ class FloatController extends Controller
             ->map(function (Outlet $outlet) use ($accounts) {
                 $cash = $accounts->cash($outlet);
                 $wallets = OutletWallet::query()->where('outlet_id', $outlet->id)->where('is_active', true)
-                    ->with(['account', 'provider'])->get()
-                    ->filter(fn (OutletWallet $w) => $w->provider->is_active)
+                    ->with(['account', 'provider', 'terminals' => fn ($q) => $q->where('is_active', true)->orderBy('name')])->get()
+                    // A balance with no working terminal is hidden once it is empty.
+                    ->filter(fn (OutletWallet $w) => $w->provider->is_active && ($w->terminals->isNotEmpty() || $w->account->balance !== 0))
                     ->sortBy(fn (OutletWallet $w) => $w->provider->sort_order)
-                    ->map(fn (OutletWallet $w) => $this->presentAccount($w->account, $w->provider->name, $w->provider->color))
+                    ->map(fn (OutletWallet $w) => [
+                        ...$this->presentAccount($w->account, $w->label(), $w->provider->color),
+                        // Which terminals pay into this balance, e.g. "Terminal 1, Terminal 2".
+                        'terminals' => $w->terminals->pluck('name')->values(),
+                    ])
                     ->values();
 
                 return [

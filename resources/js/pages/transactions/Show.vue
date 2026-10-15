@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { Form, Head, router, setLayoutProps } from '@inertiajs/vue3';
-import { BookOpenCheck, Check, Undo2, X } from '@lucide/vue';
+import { Form, Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
+import {
+    ArrowLeftRight,
+    BookOpenCheck,
+    Check,
+    CornerDownRight,
+    Undo2,
+    X,
+} from '@lucide/vue';
 import { ref } from 'vue';
 import TransactionController from '@/actions/App/Http/Controllers/TransactionController';
 import Amount from '@/components/Amount.vue';
@@ -41,6 +48,8 @@ type Tx = {
     customer_phone: string | null;
     note: string | null;
     provider: { name: string; color: string } | null;
+    terminal: string | null;
+    replaces_id: string | null;
     outlet: string | null;
     agent: string | null;
     occurred_at: string;
@@ -57,6 +66,9 @@ const props = defineProps<{
     }[];
     canVoid: boolean;
     canResolve: boolean;
+    movedTo: { id: string; terminal: string } | null;
+    /** Terminals it can be moved to; empty when this person can't move it. */
+    moveTargets: { id: string; label: string }[];
 }>();
 
 setLayoutProps({
@@ -70,6 +82,8 @@ setLayoutProps({
 });
 
 const voidOpen = ref(false);
+const moveOpen = ref(false);
+const moveTo = ref(props.moveTargets[0]?.id ?? '');
 const resolving = ref<'successful' | 'failed' | null>(null);
 
 function resolve(status: 'successful' | 'failed'): void {
@@ -124,7 +138,8 @@ const tone = (t: Tx) =>
                     class="flex items-center gap-1.5 text-sm text-muted-foreground"
                 >
                     <ProviderDot :color="transaction.provider?.color" />
-                    {{ transaction.provider?.name }} · {{ transaction.outlet }}
+                    {{ transaction.terminal ?? transaction.provider?.name }} ·
+                    {{ transaction.outlet }}
                 </p>
             </div>
 
@@ -206,8 +221,34 @@ const tone = (t: Tx) =>
             </dl>
         </section>
 
+        <!-- Moved between terminals -->
+        <Link
+            v-if="movedTo"
+            :href="show(movedTo.id)"
+            class="flex items-center gap-3 rounded-2xl border border-pending/30 bg-pending-soft px-4 py-3 text-sm text-pending hover:underline"
+        >
+            <ArrowLeftRight class="size-4 shrink-0" />
+            <span
+                >Moved to <strong>{{ movedTo.terminal }}</strong
+                >. Open the entry that replaced this one.</span
+            >
+        </Link>
+        <Link
+            v-if="transaction.replaces_id"
+            :href="show(transaction.replaces_id)"
+            class="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3 text-sm text-muted-foreground hover:underline"
+        >
+            <CornerDownRight class="size-4 shrink-0" />
+            <span
+                >Moved here from another terminal. See the original entry.</span
+            >
+        </Link>
+
         <!-- Actions -->
-        <section v-if="canResolve || canVoid" class="flex flex-wrap gap-2">
+        <section
+            v-if="canResolve || canVoid || moveTargets.length"
+            class="flex flex-wrap gap-2"
+        >
             <template v-if="canResolve">
                 <p class="w-full text-sm text-muted-foreground">
                     Waiting on the provider{{
@@ -240,9 +281,19 @@ const tone = (t: Tx) =>
                 </Button>
             </template>
             <Button
+                v-if="moveTargets.length"
+                variant="outline"
+                class="ml-auto"
+                data-test="move-terminal"
+                @click="moveOpen = true"
+            >
+                <ArrowLeftRight class="size-4" /> Wrong terminal?
+            </Button>
+            <Button
                 v-if="canVoid"
                 variant="ghost"
-                class="ml-auto text-muted-foreground"
+                class="text-muted-foreground"
+                :class="{ 'ml-auto': !moveTargets.length }"
                 @click="voidOpen = true"
             >
                 <Undo2 class="size-4" /> Void this entry
@@ -352,6 +403,61 @@ const tone = (t: Tx) =>
                         :disabled="processing"
                     >
                         <Spinner v-if="processing" /> Void entry
+                    </Button>
+                </DialogFooter>
+            </Form>
+        </DialogContent>
+    </Dialog>
+    <Dialog v-model:open="moveOpen">
+        <DialogContent class="sm:max-w-md">
+            <Form
+                v-bind="TransactionController.move.form(transaction.id)"
+                class="grid gap-4"
+                @success="moveOpen = false"
+                #default="{ errors, processing }"
+            >
+                <DialogHeader>
+                    <DialogTitle>Move to another terminal</DialogTitle>
+                    <DialogDescription>
+                        Recorded on {{ transaction.terminal }} by mistake? It is
+                        moved, not deleted: this entry is kept, marked as moved,
+                        and the same transaction is recorded on the right
+                        terminal at the same time.
+                    </DialogDescription>
+                </DialogHeader>
+                <fieldset class="grid gap-2">
+                    <legend class="mb-2 text-sm font-medium">
+                        The right terminal
+                    </legend>
+                    <label
+                        v-for="t in moveTargets"
+                        :key="t.id"
+                        class="flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-muted"
+                    >
+                        <input
+                            v-model="moveTo"
+                            type="radio"
+                            name="terminal_id"
+                            :value="t.id"
+                            class="accent-[var(--primary)]"
+                        />
+                        {{ t.label }}
+                    </label>
+                    <InputError :message="errors.terminal_id" />
+                </fieldset>
+                <div class="grid gap-2">
+                    <Label for="move-reason">Reason</Label>
+                    <Input
+                        id="move-reason"
+                        name="reason"
+                        :placeholder="`e.g. Customer paid on ${moveTargets.find((t) => t.id === moveTo)?.label ?? 'the other terminal'}`"
+                        required
+                    />
+                    <InputError :message="errors.reason" />
+                </div>
+                <DialogFooter>
+                    <Button type="submit" :disabled="processing || !moveTo">
+                        <Spinner v-if="processing" /> Move entry
                     </Button>
                 </DialogFooter>
             </Form>
