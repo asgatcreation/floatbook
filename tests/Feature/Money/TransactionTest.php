@@ -145,8 +145,15 @@ test('a pending transaction that fails posts nothing more', function () {
     $resolved = tenancy()->runAs($this->business, fn () => app(ResolvePendingTransaction::class)->handle($t, TransactionStatus::Failed));
 
     expect($resolved->status)->toBe(TransactionStatus::Failed)->and(balances($this)['cash'])->toBe(0)
-        ->and(fn () => tenancy()->runAs($this->business, fn () => app(ResolvePendingTransaction::class)->handle($t, TransactionStatus::Successful)))
+        ->and(fn () => tenancy()->runAs($this->business, fn () => app(ResolvePendingTransaction::class)->handle($t, TransactionStatus::Failed)))
         ->toThrow(ValidationException::class);
+});
+
+test('a failed transaction that the provider later confirms is posted then', function () {
+    $t = record($this, TransactionType::Transfer, 3_000, TransactionStatus::Failed);
+    tenancy()->runAs($this->business, fn () => app(ResolvePendingTransaction::class)->handle($t, TransactionStatus::Successful));
+
+    expect(balances($this)['cash'])->toBe(310_000)->and($t->fresh()->status)->toBe(TransactionStatus::Successful);
 });
 
 test('voiding reverses the money but keeps the record', function () {

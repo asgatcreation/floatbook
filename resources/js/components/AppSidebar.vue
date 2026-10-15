@@ -5,6 +5,7 @@ import {
     Lock,
     Plus,
     Receipt,
+    RotateCcw,
     ScrollText,
     Settings2,
     Store,
@@ -31,6 +32,7 @@ import { index as auditLog } from '@/routes/audit-log';
 import { edit as businessSettings } from '@/routes/business';
 import { index as floatIndex } from '@/routes/float';
 import { index as outlets } from '@/routes/outlets';
+import { index as reversals } from '@/routes/reversals';
 import { index as staff } from '@/routes/staff';
 import {
     create as newTransaction,
@@ -38,7 +40,7 @@ import {
 } from '@/routes/transactions';
 import type { NavItem } from '@/types';
 
-const { can } = useTenant();
+const { can, tenant } = useTenant();
 
 const mainNavItems = computed<NavItem[]>(() =>
     [
@@ -50,6 +52,13 @@ const mainNavItems = computed<NavItem[]>(() =>
             show: true,
         },
         { title: 'Float', href: floatIndex(), icon: Wallet, show: true },
+        {
+            title: 'Reversals',
+            href: reversals(),
+            icon: RotateCcw,
+            show: true,
+            badge: tenant.value?.open_reversals,
+        },
         {
             title: 'Outlets',
             href: outlets(),

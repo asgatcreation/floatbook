@@ -4,6 +4,7 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
@@ -32,6 +33,12 @@ const { isCurrentUrl } = useCurrentUrl();
                         <span>{{ item.title }}</span>
                     </Link>
                 </SidebarMenuButton>
+                <SidebarMenuBadge
+                    v-if="item.badge"
+                    class="rounded-full bg-gold/20 font-semibold text-foreground"
+                    :aria-label="`${item.badge} open`"
+                    >{{ item.badge }}</SidebarMenuBadge
+                >
             </SidebarMenuItem>
         </SidebarMenu>
     </SidebarGroup>

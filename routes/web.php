@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FloatController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OutletController;
+use App\Http\Controllers\ReversalController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
     Route::post('transactions/{transaction}/resolve', [TransactionController::class, 'resolve'])->can('record_transactions')->name('transactions.resolve');
     Route::post('transactions/{transaction}/void', [TransactionController::class, 'void'])->can('void_transactions')->name('transactions.void');
+
+    Route::get('reversals', [ReversalController::class, 'index'])->name('reversals.index');
+    Route::post('reversals/{case}', [ReversalController::class, 'update'])->middleware('throttle:60,1')->name('reversals.update');
 
     Route::get('float', [FloatController::class, 'index'])->name('float.index');
     Route::post('float/movements', [FloatController::class, 'store'])->name('float.store');

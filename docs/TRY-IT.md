@@ -30,35 +30,35 @@ window for a second person at the same time (e.g. Owner in one window, Agent in 
 1. Log in as the **agent**. You land on the Dashboard; the sidebar only shows what an agent may use.
 2. Click the gold **New transaction** button.
 3. Choose **Withdraw**, **Moniepoint**, and type `10000` on the keypad (or your keyboard).
-   - Watch the charge (₦200), fee (₦50) and profit (₦150) appear as you type.
-   - On the right: *Cash in drawer −₦9,800, Moniepoint wallet +₦9,950*.
+    - Watch the charge (₦200), fee (₦50) and profit (₦150) appear as you type.
+    - On the right: _Cash in drawer −₦9,800, Moniepoint wallet +₦9,950_.
 4. Press **Save** (or Enter). The drawer balance at the top drops, and the entry appears under
-   *Your recent entries*.
+   _Your recent entries_.
 5. Try **Transfer** `5000`, **Airtime** `1000` (3% commission), and a **Pending** withdrawal with
-   *"I already gave the customer cash"* ticked.
+   _"I already gave the customer cash"_ ticked.
 6. Open **Transactions**: today's volume and profit. Click a row to see the receipt and its
    **ledger lines** (money in and out always add up).
-7. Open **Float** and press **Move money → Top-up**. As an agent it becomes a *request*.
-8. Press **Lock screen** (bottom of sidebar). Set a PIN first under *Settings → Security* to unlock
+7. Open **Float** and press **Move money → Top-up**. As an agent it becomes a _request_.
+8. Press **Lock screen** (bottom of sidebar). Set a PIN first under _Settings → Security_ to unlock
    with the keypad.
 9. Try it on a phone-sized window: in Chrome press **F12**, then **Ctrl + Shift + M**.
 
 ## 4. Tour as the Owner
 
 1. Log out (your name, bottom-left → Log out) and log in as the **owner**.
-2. **Float** — see the agent's request under *Waiting for approval*; **Approve** it and watch the
+2. **Float** — see the agent's request under _Waiting for approval_; **Approve** it and watch the
    balances move. Use **Move money** for a top-up, transfer between Ketu and Ojota, or a cash
-   pickup. Click the bell icons to set *low-balance alerts*.
+   pickup. Click the bell icons to set _low-balance alerts_.
 3. **Transactions** — every outlet and agent. Open one and **Void this entry** (a reason is
-   required); the money is reversed but the record stays, marked *Voided*.
+   required); the money is reversed but the record stays, marked _Voided_.
 4. **Settings → Charges & providers** — the rules in plain words. Click **Edit** on
-   *Transfer → Customer charge*, change a band, save, then record a transfer as the agent to see the
-   new charge. Old transactions keep their old charges. Add a provider (e.g. *Paystack Terminal*)
+   _Transfer → Customer charge_, change a band, save, then record a transfer as the agent to see the
+   new charge. Old transactions keep their old charges. Add a provider (e.g. _Paystack Terminal_)
    and every outlet gets a wallet for it.
 5. **Settings → Business** — closing time, require two-factor login, idle lock time.
 6. **Outlets** — add an outlet; it gets its own cash drawer and wallets automatically.
 7. **Staff** — invite someone by email. Locally the email is written to
-   `storage/logs/laravel.log`; open that file, find the newest *Accept invitation* link and open it
+   `storage/logs/laravel.log`; open that file, find the newest _Accept invitation_ link and open it
    in a private window.
 8. **Audit log** — every important action, who did it and when, with before/after values.
 9. **Settings → Appearance** (your name, bottom-left → Settings) to switch light/dark mode.

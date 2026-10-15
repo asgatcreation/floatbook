@@ -17,6 +17,7 @@ enum LedgerAccountType: string
     case ExpenseProviderFees = 'expense_provider_fees';
     case ExpenseOperating = 'expense_operating';
     case CashVariance = 'cash_variance';
+    case ReversalLosses = 'reversal_losses';
 
     // Per business
     case HeadOffice = 'head_office';
@@ -46,6 +47,7 @@ enum LedgerAccountType: string
             self::ExpenseProviderFees => 'Provider fees',
             self::ExpenseOperating => 'Operating expenses',
             self::CashVariance => 'Cash shortages and excess',
+            self::ReversalLosses => 'Losses on failed transactions',
             self::HeadOffice => 'Head office',
             self::OwnerCapital => "Owner's capital",
         };

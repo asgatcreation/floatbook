@@ -2,7 +2,9 @@
 
 namespace App\Actions\Transactions;
 
+use App\Actions\Reversals\ReversalCases;
 use App\Models\JournalEntry;
+use App\Models\ReversalCase;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Audit;
@@ -16,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  */
 class VoidTransaction
 {
-    public function __construct(private Ledger $ledger, private Audit $audit) {}
+    public function __construct(private Ledger $ledger, private Audit $audit, private ReversalCases $reversals) {}
 
     public function handle(Transaction $transaction, User $by, string $reason): Transaction
     {
@@ -25,6 +27,12 @@ class VoidTransaction
 
             if ($fresh->isVoided()) {
                 throw ValidationException::withMessages(['reason' => 'This transaction has already been voided.']);
+            }
+
+            $settled = ReversalCase::query()->where('transaction_id', $fresh->id)->whereNotNull('journal_entry_id')->exists();
+
+            if ($settled) {
+                throw ValidationException::withMessages(['reason' => 'Its reversal case has already been settled, so it can no longer be voided.']);
             }
 
             $entries = JournalEntry::query()
@@ -46,6 +54,8 @@ class VoidTransaction
                 'void_reason' => $reason,
                 'void_entry_id' => $lastReversal?->id,
             ])->save();
+
+            $this->reversals->cancelFor($fresh);
 
             $this->audit->record('transaction.voided', $fresh, after: [
                 'reason' => $reason, 'amount' => $fresh->amount, 'type' => $fresh->type->value,

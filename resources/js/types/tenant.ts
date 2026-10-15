@@ -36,6 +36,7 @@ export type Tenant = {
         permissions: Permission[];
     };
     businesses: { id: string; name: string; role: string }[];
+    open_reversals: number;
 };
 
 export type RoleOption = {

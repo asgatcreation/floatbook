@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\Permission;
 use App\Models\Membership;
+use App\Models\ReversalCase;
 use App\Models\User;
 use App\Support\Tenancy\CurrentBusiness;
 use Illuminate\Http\Request;
@@ -84,6 +85,10 @@ class HandleInertiaRequests extends Middleware
                     $membership->isActive() ? $membership->role->permissions() : [],
                 ),
             ],
+            // Open reversal cases this member can see, for the sidebar badge.
+            'open_reversals' => fn () => ReversalCase::query()->open()
+                ->when($membership->role->isOutletScoped(), fn ($q) => $q->whereIn('outlet_id', $membership->outlets->pluck('id')))
+                ->count(),
             'businesses' => fn () => $user->activeMemberships()->with('business:id,name')->get()
                 ->map(fn (Membership $m) => ['id' => $m->business_id, 'name' => $m->business->name, 'role' => $m->role->label()])
                 ->sortBy('name')->values(),

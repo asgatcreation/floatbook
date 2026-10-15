@@ -2,6 +2,7 @@
 
 namespace App\Actions\Transactions;
 
+use App\Actions\Reversals\ReversalCases;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\Membership;
@@ -31,6 +32,7 @@ class RecordTransaction
         private TransactionPosting $posting,
         private Ledger $ledger,
         private Audit $audit,
+        private ReversalCases $reversals,
     ) {}
 
     /**
@@ -64,7 +66,7 @@ class RecordTransaction
         $status = $data['status'];
         $cashPaid = $status === TransactionStatus::Pending && $type->canPayCashWhilePending() && ($data['cash_paid_while_pending'] ?? false);
         $quote = $this->charges->quote($type, $provider->id, $outlet->id, $data['amount']);
-        $occurredAt = CarbonImmutable::now();
+        $occurredAt = $this->occurredAt($data);
 
         try {
             $transaction = DB::transaction(function () use ($by, $data, $outlet, $provider, $type, $status, $cashPaid, $quote, $occurredAt): Transaction {
@@ -107,6 +109,9 @@ class RecordTransaction
                     $transaction->forceFill(['journal_entry_id' => $entry->id])->save();
                 }
 
+                // Pending or failed: someone must follow it up with the provider.
+                $this->reversals->openFor($transaction->setRelation('outlet', $outlet));
+
                 return $transaction;
             });
         } catch (UniqueConstraintViolationException) {
@@ -123,5 +128,23 @@ class RecordTransaction
         ]);
 
         return new RecordedTransaction($transaction, wasDuplicate: false);
+    }
+
+    /**
+     * Entries made offline keep the time they were actually recorded on the phone, as long
+     * as it is believable: not in the future and no more than 3 days old. Otherwise "now".
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function occurredAt(array $data): CarbonImmutable
+    {
+        $now = CarbonImmutable::now();
+        $client = $data['client_recorded_at'] ?? null;
+
+        if (($data['source'] ?? 'counter') !== 'offline_sync' || ! $client instanceof CarbonImmutable) {
+            return $now;
+        }
+
+        return $client->isAfter($now->addMinutes(2)) || $client->isBefore($now->subDays(3)) ? $now : $client;
     }
 }

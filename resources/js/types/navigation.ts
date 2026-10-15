@@ -11,4 +11,6 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon;
     isActive?: boolean;
+    /** A small count shown beside the item, e.g. open reversal cases. */
+    badge?: number;
 };
