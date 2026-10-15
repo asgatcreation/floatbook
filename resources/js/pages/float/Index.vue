@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     ArrowRight,
     Banknote,
@@ -9,6 +9,7 @@ import {
     Clock,
     Landmark,
     Plus,
+    Store,
     Wallet,
     X,
 } from '@lucide/vue';
@@ -34,6 +35,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTenant } from '@/composables/useTenant';
 import { koboToInput, parseNaira } from '@/lib/money';
 import { index } from '@/routes/float';
+import { index as outletsIndex } from '@/routes/outlets';
 
 import { useBusinessTime } from '@/lib/dates';
 
@@ -88,7 +90,7 @@ const props = defineProps<{
     types: { value: string; label: string }[];
 }>();
 
-const { tenant } = useTenant();
+const { tenant, can } = useTenant();
 const isOwner = computed(() => tenant.value?.membership.role === 'owner');
 
 const totalFloat = (o: OutletFloat) =>
@@ -375,10 +377,23 @@ const statusTone = (s: Movement['status']) =>
         <!-- Outlets -->
         <div
             v-if="outlets.length === 0"
-            class="rounded-2xl border border-dashed bg-card p-10 text-center text-sm text-muted-foreground"
+            class="flex flex-col items-center gap-3 rounded-2xl border border-dashed bg-card px-6 py-14 text-center"
         >
-            No outlets yet. Add an outlet first, then set its opening cash and
-            wallet balances here.
+            <span
+                class="grid size-12 place-items-center rounded-full bg-gold/15 text-gold"
+            >
+                <Store class="size-6" />
+            </span>
+            <h2 class="text-lg font-semibold">No outlets yet</h2>
+            <p class="max-w-sm text-sm text-muted-foreground">
+                Float lives in each outlet's drawer and wallets. Add an outlet,
+                then set its opening cash and wallet balances here.
+            </p>
+            <Button v-if="can('manage_outlets')" as-child>
+                <Link :href="outletsIndex()"
+                    ><Plus class="size-4" /> Add an outlet</Link
+                >
+            </Button>
         </div>
 
         <section
