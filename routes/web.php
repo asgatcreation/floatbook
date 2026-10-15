@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\EmailVerificationCodeController;
 use App\Http\Controllers\Auth\LockController;
 use App\Http\Controllers\BusinessSwitchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FloatController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OutletController;
@@ -64,6 +65,10 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::post('transactions/{transaction}/resolve', [TransactionController::class, 'resolve'])->can('record_transactions')->name('transactions.resolve');
     Route::post('transactions/{transaction}/void', [TransactionController::class, 'void'])->can('void_transactions')->name('transactions.void');
     Route::post('transactions/{transaction}/move', [TransactionController::class, 'move'])->can('record_transactions')->name('transactions.move');
+
+    Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::post('expenses', [ExpenseController::class, 'store'])->can('record_transactions')->name('expenses.store');
+    Route::post('expenses/{expense}/void', [ExpenseController::class, 'void'])->can('void_transactions')->name('expenses.void');
 
     Route::middleware('can:import_statements')->group(function () {
         Route::get('imports', [StatementImportController::class, 'index'])->name('imports.index');

@@ -2,6 +2,7 @@
 import { Link, router } from '@inertiajs/vue3';
 import {
     FileSpreadsheet,
+    HandCoins,
     LayoutGrid,
     Lock,
     Plus,
@@ -31,6 +32,7 @@ import { useTenant } from '@/composables/useTenant';
 import { dashboard, lock } from '@/routes';
 import { index as auditLog } from '@/routes/audit-log';
 import { edit as businessSettings } from '@/routes/business';
+import { index as expensesIndex } from '@/routes/expenses';
 import { index as floatIndex } from '@/routes/float';
 import { index as imports } from '@/routes/imports';
 import { index as outlets } from '@/routes/outlets';
@@ -54,6 +56,12 @@ const mainNavItems = computed<NavItem[]>(() =>
             show: true,
         },
         { title: 'Float', href: floatIndex(), icon: Wallet, show: true },
+        {
+            title: 'Expenses',
+            href: expensesIndex(),
+            icon: HandCoins,
+            show: true,
+        },
         {
             title: 'Reversals',
             href: reversals(),
