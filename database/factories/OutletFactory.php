@@ -18,8 +18,15 @@ class OutletFactory extends Factory
      */
     public function definition(): array
     {
-        $name = fake()->unique()->randomElement(['Ketu', 'Ojota', 'Mile 12', 'Yaba', 'Ikeja', 'Oshodi', 'Surulere', 'Agege', 'Ikorodu', 'Lekki', 'Ajah', 'Festac'])
+        $name = fake()->randomElement(['Ketu', 'Ojota', 'Mile 12', 'Yaba', 'Ikeja', 'Oshodi', 'Surulere', 'Agege', 'Ikorodu', 'Lekki', 'Ajah', 'Festac'])
             .' '.fake()->randomElement(['Main', 'Market', 'Junction', 'Plaza']);
+
+        // Names are unique per business, and tests often name an outlet by hand
+        // (e.g. "Ketu Main"), so step past any name the business already uses.
+        $base = $name;
+        for ($n = 2; Outlet::query()->where('name', $name)->exists(); $n++) {
+            $name = "{$base} {$n}";
+        }
 
         return [
             'name' => $name,
