@@ -21,6 +21,7 @@ defineProps<{
         closing_time: string;
         require_two_factor: boolean;
         idle_lock_minutes: number;
+        daily_summary: boolean;
     };
     timezones: string[];
 }>();
@@ -88,6 +89,25 @@ defineProps<{
                 <InputError :message="errors.closing_time" />
             </div>
         </div>
+
+        <label class="flex items-start gap-3 rounded-xl border p-4 text-sm">
+            <input type="hidden" name="daily_summary" value="0" />
+            <Checkbox
+                name="daily_summary"
+                value="1"
+                :default-value="business.daily_summary"
+                class="mt-0.5"
+            />
+            <span>
+                <span class="font-medium">Email me the day's summary</span>
+                <span class="block text-muted-foreground">
+                    After closing time, owners get one email with the day's
+                    profit, each outlet's figures and anything that needs
+                    attention.
+                </span>
+            </span>
+        </label>
+        <InputError :message="errors.daily_summary" />
 
         <Heading
             variant="small"

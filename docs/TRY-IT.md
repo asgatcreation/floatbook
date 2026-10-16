@@ -174,6 +174,21 @@ and watch it appear. Agents see their own day and their outlet's balances, not t
 4. Agents can open Reports too, but only ever see their own figures. Accountants can
    download; agents cannot.
 
+## 15. The end-of-day email
+
+1. Owners get one email after closing time (set under **Settings → Business**): the day's
+   profit against yesterday, volume, charges, fees and expenses, each outlet's figures and
+   whether it was counted, plus anything needing attention.
+2. To see it now, run this in a second PowerShell window:
+
+    ```powershell
+    php artisan floatbook:daily-summary --date=2026-10-16 --force
+    ```
+
+    Locally the email is written to `storage/logs/laravel.log` — open it and read the
+    plain-text version at the bottom.
+3. Turn it off with **Email me the day's summary** under Settings → Business.
+
 ## What is not built yet
 
-Alerts by email and the daily summary email, unusual-activity flags, the demo data and the live website. See `docs/PLAN.md`.
+Unusual-activity flags, the demo data and the live website. See `docs/PLAN.md`.
