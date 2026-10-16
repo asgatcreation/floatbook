@@ -2,6 +2,7 @@
 import { Link, router } from '@inertiajs/vue3';
 import {
     Calculator,
+    ChartColumn,
     FileSpreadsheet,
     HandCoins,
     LayoutGrid,
@@ -38,6 +39,7 @@ import { index as floatIndex } from '@/routes/float';
 import { index as imports } from '@/routes/imports';
 import { index as outlets } from '@/routes/outlets';
 import { index as reconciliationIndex } from '@/routes/reconciliation';
+import { index as reportsIndex } from '@/routes/reports';
 import { index as reversals } from '@/routes/reversals';
 import { index as staff } from '@/routes/staff';
 import {
@@ -63,6 +65,12 @@ const mainNavItems = computed<NavItem[]>(() =>
             href: reconciliationIndex(),
             icon: Calculator,
             show: true,
+        },
+        {
+            title: 'Reports',
+            href: reportsIndex(),
+            icon: ChartColumn,
+            show: can('view_reports'),
         },
         {
             title: 'Expenses',

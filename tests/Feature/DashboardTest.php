@@ -26,6 +26,6 @@ test('the shared tenant props describe the current business and role', function 
         ->assertInertia(fn ($page) => $page
             ->where('tenant.business.name', 'Ade & Sons POS')
             ->where('tenant.membership.role', 'agent')
-            ->where('tenant.membership.permissions', ['record_transactions'])
+            ->where('tenant.membership.permissions', ['record_transactions', 'view_reports'])
             ->where('tenant.membership.outlets.0.name', 'Ketu Main'));
 });

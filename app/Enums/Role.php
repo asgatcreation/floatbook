@@ -64,6 +64,8 @@ enum Role: string
             ],
             self::Agent => [
                 Permission::RecordTransactions,
+                // Reports are narrowed to their own figures (see ReportController).
+                Permission::ViewReports,
             ],
             self::Accountant => [
                 Permission::ViewAuditLog,

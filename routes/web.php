@@ -11,6 +11,7 @@ use App\Http\Controllers\FloatController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\ReconciliationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReversalController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StatementImportController;
@@ -74,6 +75,9 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::post('reconciliations/{reconciliation}/send-back', [ReconciliationController::class, 'sendBack'])->can('approve_reconciliation')->name('reconciliation.send-back');
     Route::post('reconciliations/{reconciliation}/reopen', [ReconciliationController::class, 'reopen'])->can('reopen_day')->name('reconciliation.reopen');
     Route::post('shortages/{shortage}/settle', [ReconciliationController::class, 'settleShortage'])->can('approve_reconciliation')->name('shortages.settle');
+
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('expenses', [ExpenseController::class, 'store'])->can('record_transactions')->name('expenses.store');

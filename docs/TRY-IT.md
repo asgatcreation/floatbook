@@ -163,6 +163,17 @@ reversals, counts to approve, days nobody counted, low balances, money owed, flo
 each outlet's cash, wallets and day status. Record a transaction as the agent in another window
 and watch it appear. Agents see their own day and their outlet's balances, not the business's profit.
 
+## 14. Reports and downloads
+
+1. Open **Reports**. Pick the dates (or press **Today**, **7 days**, **This month**,
+   **Last month**) and choose **Group by**: Day, Outlet, Terminal, Staff or Type.
+2. Narrow it with the outlet, terminal, staff and type pickers. Each row shows entries,
+   volume, what was earned, provider fees, expenses and profit, with a total at the bottom.
+3. **Download** gives you this summary, or every transaction behind it, as **Excel (.xlsx)**
+   or **CSV**. Amounts come out in naira so they add up in your own spreadsheet.
+4. Agents can open Reports too, but only ever see their own figures. Accountants can
+   download; agents cannot.
+
 ## What is not built yet
 
-Reports and exports, alerts by email and the daily summary email, the demo data and the live website. See `docs/PLAN.md`.
+Alerts by email and the daily summary email, unusual-activity flags, the demo data and the live website. See `docs/PLAN.md`.
