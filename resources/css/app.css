@@ -141,6 +141,8 @@
     --chart-3: #1d5fd1;
     --chart-4: #12723a;
     --chart-5: #8f96a1;
+    /* Single-series bars: checked for contrast and lightness on both card surfaces. */
+    --chart-bar: #b37a08;
 
     --sidebar-background: #ffffff;
     --sidebar-foreground: #12161c;
@@ -190,6 +192,7 @@
     --chart-3: #4ade80;
     --chart-4: #c4a7ff;
     --chart-5: #6b7280;
+    --chart-bar: #b37a08;
 
     --sidebar-background: #0f1318;
     --sidebar-foreground: #eef1f5;

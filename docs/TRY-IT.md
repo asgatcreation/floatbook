@@ -154,7 +154,15 @@ Offline mode only works on the built app, not while `npm run dev` is running:
 6. The **owner** can **Reopen this day** with a reason: the difference is undone and it can be
    counted again. Everything is in the audit log.
 
+## 13. The dashboard
+
+Log in as the **owner** and open **Dashboard**. It updates itself every 30 seconds (the green
+_Live_ dot): today's profit (after fees and expenses) compared with yesterday, volume, what was
+earned, expenses, a 7-day profit chart (hover a day for its numbers), **Needs attention** (overdue
+reversals, counts to approve, days nobody counted, low balances, money owed, float requests) and
+each outlet's cash, wallets and day status. Record a transaction as the agent in another window
+and watch it appear. Agents see their own day and their outlet's balances, not the business's profit.
+
 ## What is not built yet
 
-The live owner dashboard, reports and exports, alerts and the daily summary email, the demo data and
-the live website. See `docs/PLAN.md`.
+Reports and exports, alerts by email and the daily summary email, the demo data and the live website. See `docs/PLAN.md`.
