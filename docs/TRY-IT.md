@@ -187,6 +187,7 @@ and watch it appear. Agents see their own day and their outlet's balances, not t
 
     Locally the email is written to `storage/logs/laravel.log` — open it and read the
     plain-text version at the bottom.
+
 3. Turn it off with **Email me the day's summary** under Settings → Business.
 
 ## What is not built yet
