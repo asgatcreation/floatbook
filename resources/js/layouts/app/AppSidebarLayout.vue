@@ -3,6 +3,7 @@ import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import DemoBanner from '@/components/DemoBanner.vue';
 import InstallPrompt from '@/components/InstallPrompt.vue';
 import MobileTabBar from '@/components/MobileTabBar.vue';
 import { Toaster } from '@/components/ui/sonner';
@@ -22,6 +23,7 @@ withDefaults(defineProps<Props>(), {
         <AppSidebar />
         <AppContent variant="sidebar" class="min-w-0 overflow-x-clip">
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
+            <DemoBanner />
             <InstallPrompt />
             <slot />
             <MobileTabBar />

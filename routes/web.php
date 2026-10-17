@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationCodeController;
 use App\Http\Controllers\Auth\LockController;
 use App\Http\Controllers\BusinessSwitchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemoLoginController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FloatController;
 use App\Http\Controllers\InvitationController;
@@ -18,9 +19,24 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StatementImportController;
 use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\TransactionController;
+use Database\Seeders\DemoSeeder;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', fn () => Inertia::render('Welcome', [
+    // The landing page offers one-click demo sign-ins only when demo mode is on.
+    'demoRoles' => config('floatbook.demo.enabled')
+        ? collect(DemoSeeder::PEOPLE)->map(fn (array $person, string $key) => [
+            'key' => $key,
+            'name' => $person[1],
+            'role' => $person[2]->label(),
+            'description' => $person[2]->description(),
+        ])->values()
+        : [],
+]))->name('home');
+
+// One-click sign-in to the demo business (only when demo mode is on).
+Route::post('demo/{role}', DemoLoginController::class)->middleware(['guest', 'throttle:10,1'])->name('demo.login');
 
 // Invitation links work whether or not the person is signed in.
 Route::get('invitations/{token}', [AcceptInvitationController::class, 'show'])->name('invitations.show');

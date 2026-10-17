@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Form, Head, Link } from '@inertiajs/vue3';
 import {
     ArrowRight,
     BookCheck,
     FileSpreadsheet,
     History,
+    LogIn,
     LockKeyhole,
     RotateCcw,
     Users,
@@ -15,6 +16,16 @@ import {
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import EntryPreview from '@/components/marketing/EntryPreview.vue';
 import { dashboard, login, register } from '@/routes';
+import { login as demoLogin } from '@/routes/demo';
+
+defineProps<{
+    demoRoles: {
+        key: string;
+        name: string;
+        role: string;
+        description: string;
+    }[];
+}>();
 
 const features = [
     {
@@ -205,6 +216,41 @@ const safeguards = [
                                 Log in
                             </Link>
                         </div>
+                        <!-- Look around without making an account -->
+                        <div
+                            v-if="demoRoles.length && !$page.props.auth.user"
+                            class="mt-8 rounded-2xl border bg-card p-4"
+                        >
+                            <p class="text-sm font-semibold">
+                                Or look around the demo business
+                            </p>
+                            <p class="mt-0.5 text-sm text-muted-foreground">
+                                Two weeks of real-looking trading at two
+                                outlets. Nothing you do there is kept: it is
+                                rebuilt each night.
+                            </p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <Form
+                                    v-for="person in demoRoles"
+                                    :key="person.key"
+                                    v-bind="demoLogin.form(person.key)"
+                                    #default="{ processing }"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="inline-flex h-10 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium hover:bg-muted disabled:opacity-60"
+                                        :disabled="processing"
+                                        :title="person.description"
+                                    >
+                                        <LogIn
+                                            class="size-4 text-muted-foreground"
+                                        />
+                                        {{ person.role }}
+                                    </button>
+                                </Form>
+                            </div>
+                        </div>
+
                         <ul
                             class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground"
                         >
