@@ -15,7 +15,7 @@ import {
 } from '@lucide/vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import EntryPreview from '@/components/marketing/EntryPreview.vue';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login, privacy, register, terms } from '@/routes';
 import { login as demoLogin } from '@/routes/demo';
 
 defineProps<{
@@ -473,6 +473,14 @@ const safeguards = [
                     <AppLogoIcon class="size-5" />
                     <span>© {{ new Date().getFullYear() }} FloatBook</span>
                 </div>
+                <p class="flex gap-4">
+                    <Link :href="privacy()" class="hover:text-foreground"
+                        >Privacy</Link
+                    >
+                    <Link :href="terms()" class="hover:text-foreground"
+                        >Terms</Link
+                    >
+                </p>
                 <p>
                     Designed and built by Akanji Oluwaseun Gabriel
                     <a

@@ -35,6 +35,13 @@ Route::get('/', fn () => Inertia::render('Welcome', [
         : [],
 ]))->name('home');
 
+// Privacy and Terms, readable without an account.
+Route::get('privacy', fn () => Inertia::render('legal/Legal', [
+    'page' => 'privacy', 'updated' => config('floatbook.legal.updated'), 'contact' => config('floatbook.legal.contact'),
+]))->name('privacy');
+Route::get('terms', fn () => Inertia::render('legal/Legal', [
+    'page' => 'terms', 'updated' => config('floatbook.legal.updated'), 'contact' => config('floatbook.legal.contact'),
+]))->name('terms');
 // One-click sign-in to the demo business (only when demo mode is on).
 Route::post('demo/{role}', DemoLoginController::class)->middleware(['guest', 'throttle:10,1'])->name('demo.login');
 

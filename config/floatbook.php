@@ -20,4 +20,15 @@ return [
         'reset_at' => env('DEMO_RESET_AT', '02:30'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Legal pages
+    |--------------------------------------------------------------------------
+    */
+
+    'legal' => [
+        'updated' => env('LEGAL_UPDATED', '17 October 2026'),
+        'contact' => env('LEGAL_CONTACT', 'asgatcreation@gmail.com'),
+    ],
+
 ];

@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureUnlocked;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveCurrentBusiness;
+use App\Http\Middleware\SecurityHeaders;
 use App\Support\Tenancy\TenancyViolation;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
+            SecurityHeaders::class,
             HandleAppearance::class,
             ResolveCurrentBusiness::class,
             HandleInertiaRequests::class,

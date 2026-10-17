@@ -13,7 +13,9 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            // The landing page and the legal pages bring their own shell.
             case name === 'Welcome':
+            case name.startsWith('legal/'):
                 return null;
             case name.startsWith('auth/'):
             case name.startsWith('invitations/'):
