@@ -14,6 +14,7 @@ use App\Models\OutletWallet;
 use App\Models\Reconciliation;
 use App\Models\ReconciliationWallet;
 use App\Models\StaffShortage;
+use App\Support\Anomalies\AnomalyChecks;
 use App\Support\Audit;
 use App\Support\Ledger\Accounts;
 use App\Support\Ledger\Ledger;
@@ -40,6 +41,7 @@ class Reconciliations
         private Accounts $accounts,
         private Ledger $ledger,
         private Audit $audit,
+        private AnomalyChecks $anomalies,
     ) {}
 
     /**
@@ -198,6 +200,8 @@ class Reconciliations
                 'decision_note' => $note,
                 'variance_entry_id' => $entry?->id,
             ])->save();
+
+            $this->anomalies->forReconciliation($rec);
 
             $this->audit->record('reconciliation.approved', $rec, after: [
                 'date' => $rec->business_date->toDateString(), 'cash_variance' => $rec->cash_variance,

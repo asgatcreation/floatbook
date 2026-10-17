@@ -7,6 +7,7 @@ use App\Models\JournalEntry;
 use App\Models\ReversalCase;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\Anomalies\AnomalyChecks;
 use App\Support\Audit;
 use App\Support\Ledger\DayLocks;
 use App\Support\Ledger\Ledger;
@@ -24,6 +25,7 @@ class VoidTransaction
         private Audit $audit,
         private ReversalCases $reversals,
         private DayLocks $days,
+        private AnomalyChecks $anomalies,
     ) {}
 
     public function handle(Transaction $transaction, User $by, string $reason): Transaction
@@ -65,6 +67,8 @@ class VoidTransaction
             ])->save();
 
             $this->reversals->cancelFor($fresh);
+
+            $this->anomalies->forVoid($fresh->load('membership.user'));
 
             $this->audit->record('transaction.voided', $fresh, after: [
                 'reason' => $reason, 'amount' => $fresh->amount, 'type' => $fresh->type->value,

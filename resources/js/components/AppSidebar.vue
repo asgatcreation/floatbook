@@ -11,6 +11,7 @@ import {
     Receipt,
     RotateCcw,
     ScrollText,
+    ShieldAlert,
     Settings2,
     Store,
     Users,
@@ -35,6 +36,7 @@ import { dashboard, lock } from '@/routes';
 import { index as auditLog } from '@/routes/audit-log';
 import { edit as businessSettings } from '@/routes/business';
 import { index as expensesIndex } from '@/routes/expenses';
+import { index as flagsIndex } from '@/routes/flags';
 import { index as floatIndex } from '@/routes/float';
 import { index as imports } from '@/routes/imports';
 import { index as outlets } from '@/routes/outlets';
@@ -65,6 +67,13 @@ const mainNavItems = computed<NavItem[]>(() =>
             href: reconciliationIndex(),
             icon: Calculator,
             show: true,
+        },
+        {
+            title: 'Flags',
+            href: flagsIndex(),
+            icon: ShieldAlert,
+            show: can('approve_reconciliation') || can('view_audit_log'),
+            badge: tenant.value?.open_flags,
         },
         {
             title: 'Reports',

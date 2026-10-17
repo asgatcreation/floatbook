@@ -39,6 +39,7 @@ export type Tenant = {
     };
     businesses: { id: string; name: string; role: string }[];
     open_reversals: number;
+    open_flags: number;
 };
 
 export type RoleOption = {

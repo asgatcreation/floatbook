@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AcceptInvitationController;
+use App\Http\Controllers\AnomalyController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\EmailVerificationCodeController;
 use App\Http\Controllers\Auth\LockController;
@@ -75,6 +76,9 @@ Route::middleware(['auth', 'verified', 'member', 'unlocked', 'two-factor.require
     Route::post('reconciliations/{reconciliation}/send-back', [ReconciliationController::class, 'sendBack'])->can('approve_reconciliation')->name('reconciliation.send-back');
     Route::post('reconciliations/{reconciliation}/reopen', [ReconciliationController::class, 'reopen'])->can('reopen_day')->name('reconciliation.reopen');
     Route::post('shortages/{shortage}/settle', [ReconciliationController::class, 'settleShortage'])->can('approve_reconciliation')->name('shortages.settle');
+
+    Route::get('flags', [AnomalyController::class, 'index'])->name('flags.index');
+    Route::post('flags/{flag}/review', [AnomalyController::class, 'review'])->name('flags.review');
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');

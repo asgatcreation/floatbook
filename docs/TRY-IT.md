@@ -190,6 +190,21 @@ and watch it appear. Agents see their own day and their outlet's balances, not t
 
 3. Turn it off with **Email me the day's summary** under Settings → Business.
 
+## 16. Flags (unusual activity)
+
+FloatBook raises a flag when something is worth a second look. A flag is a question, never
+an accusation, and it never blocks an entry.
+
+1. As the agent, record a withdrawal of `60000`. It saves normally.
+2. Open **Flags** (owner or supervisor). You'll see _Unusually large_ with the amount, the
+   outlet, who recorded it and when. **Open the entry** shows the receipt.
+3. Press **Add a note**, type what you found, then **It was fine** or **It was a problem**.
+   The flag moves to that tab and keeps your note. **Look at it again** reopens it.
+4. The other flags: the same provider reference twice within a week, entries more than
+   90 minutes after closing (or before 5am), someone voiding 3+ entries in a week, and an
+   outlet short more than once in 30 days.
+5. The "unusually large" level is ₦50,000 by default.
+
 ## What is not built yet
 
-Unusual-activity flags, the demo data and the live website. See `docs/PLAN.md`.
+The demo data, the legal pages and the live website. See `docs/PLAN.md`.

@@ -7,6 +7,7 @@ use App\Enums\LedgerAccountType;
 use App\Enums\Permission;
 use App\Enums\ReconciliationStatus;
 use App\Enums\Role;
+use App\Models\AnomalyFlag;
 use App\Models\FloatMovement;
 use App\Models\Invitation;
 use App\Models\LedgerAccount;
@@ -197,6 +198,16 @@ class DashboardController extends Controller
 
         if ($owed > 0) {
             $alerts[] = ['tone' => 'warning', 'text' => ($isAgent ? 'You owe ' : 'Staff owe ').Money::kobo((int) $owed)->format(true).' from cash shortages', 'href' => route('reconciliation.index')];
+        }
+
+        if ($me->allows(Permission::ApproveReconciliation) || $me->allows(Permission::ViewAuditLog)) {
+            $flags = AnomalyFlag::query()->open()
+                ->when($isAgent, fn ($q) => $q->whereIn('outlet_id', $outletIds))
+                ->count();
+
+            if ($flags > 0) {
+                $alerts[] = ['tone' => 'warning', 'text' => $flags === 1 ? '1 flag to look at' : "{$flags} flags to look at", 'href' => route('flags.index')];
+            }
         }
 
         if ($me->allows(Permission::ApproveFloat)) {

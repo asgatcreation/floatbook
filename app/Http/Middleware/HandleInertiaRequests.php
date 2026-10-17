@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\Permission;
+use App\Models\AnomalyFlag;
 use App\Models\Membership;
 use App\Models\ReversalCase;
 use App\Models\User;
@@ -90,6 +91,12 @@ class HandleInertiaRequests extends Middleware
             'open_reversals' => fn () => ReversalCase::query()->open()
                 ->when($membership->role->isOutletScoped(), fn ($q) => $q->whereIn('outlet_id', $membership->outlets->pluck('id')))
                 ->count(),
+            // Flags waiting to be looked at, for those who judge them.
+            'open_flags' => fn () => $membership->allows(Permission::ApproveReconciliation) || $membership->allows(Permission::ViewAuditLog)
+                ? AnomalyFlag::query()->open()
+                    ->when($membership->role->isOutletScoped(), fn ($q) => $q->whereIn('outlet_id', $membership->outlets->pluck('id'))->orWhereNull('outlet_id'))
+                    ->count()
+                : 0,
             'businesses' => fn () => $user->activeMemberships()->with('business:id,name')->get()
                 ->map(fn (Membership $m) => ['id' => $m->business_id, 'name' => $m->business->name, 'role' => $m->role->label()])
                 ->sortBy('name')->values(),

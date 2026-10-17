@@ -8,6 +8,7 @@ use App\Enums\TransactionType;
 use App\Models\Membership;
 use App\Models\Terminal;
 use App\Models\Transaction;
+use App\Support\Anomalies\AnomalyChecks;
 use App\Support\Audit;
 use App\Support\Charges\ChargeCalculator;
 use App\Support\Charges\ChargeQuote;
@@ -35,6 +36,7 @@ class RecordTransaction
         private Audit $audit,
         private ReversalCases $reversals,
         private DayLocks $days,
+        private AnomalyChecks $anomalies,
     ) {}
 
     /**
@@ -120,6 +122,8 @@ class RecordTransaction
                 wasDuplicate: true,
             );
         }
+
+        $this->anomalies->forTransaction($transaction->setRelation('outlet', $outlet));
 
         $this->audit->record('transaction.recorded', $transaction, after: [
             'type' => $type->value, 'amount' => $transaction->amount, 'status' => $status->value,
