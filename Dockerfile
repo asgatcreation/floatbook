@@ -16,10 +16,14 @@ RUN composer install \
 # Node is lifted out of the official image; both are Alpine, so the binary just works.
 FROM php:8.5-cli-alpine AS frontend
 
+# Node is built against the C++ runtime, which the PHP image doesn't ship.
+RUN apk add --no-cache libstdc++
+
 COPY --from=node:24-alpine /usr/local/bin/node /usr/local/bin/node
 COPY --from=node:24-alpine /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
-    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && node --version && npm --version
 
 WORKDIR /app
 
