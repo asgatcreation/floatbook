@@ -14,7 +14,7 @@ fi
 
 # Bring the database up to date. The first deploy creates every table.
 echo "Running migrations…"
-php artisan migrate --force --isolated || {
+php artisan migrate --force || {
     echo "Migrations failed. The container will not start." >&2
     exit 1
 }
@@ -25,9 +25,10 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-# Only when demo mode is on, and only if it isn't there yet.
+# Rebuild the demo business, in the background: it takes about a minute and the web
+# server should be answering long before then.
 if [ "${DEMO_MODE}" = "true" ]; then
-    php artisan floatbook:reset-demo --force || echo "Demo seeding failed; carrying on." >&2
+    (php artisan floatbook:reset-demo --force || echo "Demo seeding failed; carrying on." >&2) &
 fi
 
 echo "FloatBook ready on port 8080."

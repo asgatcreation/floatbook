@@ -63,7 +63,7 @@ services:
           - key: DEMO_MODE
             value: true
           - key: DEMO_RESET_AT
-            value: "02:30"
+            value: '02:30'
 
           - key: LOG_CHANNEL
             value: stderr

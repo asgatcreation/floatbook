@@ -1,0 +1,40 @@
+# Keep the image small, and keep local secrets out of it.
+
+# Never ship local environment files: production values come from Render.
+.env
+.env.*
+!.env.example
+
+# Installed per stage inside the build.
+node_modules
+vendor
+
+# Build output is produced by the frontend stage.
+public/build
+public/hot
+bootstrap/ssr
+
+# Local state and caches.
+storage/app/*
+!storage/app/.gitignore
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*
+
+# Not needed to run the app.
+.git
+.github
+.claude
+.cursor
+.agents
+.junie
+docs
+tests
+compose.yaml
+phpunit.xml
+phpstan.neon
+pint.json
+*.md
+!README.md
