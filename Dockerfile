@@ -45,15 +45,18 @@ FROM php:8.5-fpm-alpine
 # pdo_pgsql for Neon, intl/bcmath for money and dates, zip for Excel exports.
 #
 # The runtime libraries are installed in their own right, so removing the build headers
-# afterwards cannot take them with them. Opcache is built on its own: building it
-# alongside the others in parallel races and leaves nothing to install.
+# afterwards cannot take them with them. Opcache comes with this PHP image, so it is
+# switched on rather than built; the app works without it, just slower.
 RUN apk add --no-cache nginx supervisor libpq icu-libs libzip \
     && apk add --no-cache --virtual .build-deps postgresql-dev icu-dev libzip-dev \
     && docker-php-ext-install -j"$(nproc)" pdo_pgsql intl bcmath zip \
-    && docker-php-ext-install opcache \
+    && { php -m | grep -qi opcache \
+        || docker-php-ext-enable opcache \
+        || echo "Carrying on without opcache."; } \
     && apk del --no-network .build-deps \
     && rm -rf /var/cache/apk/* /usr/src/php* \
-    && php -m | grep -E 'pdo_pgsql|intl|bcmath|zip|Zend OPcache'
+    && php -m \
+    && php -r 'foreach (["pdo_pgsql","intl","bcmath","zip"] as $e) { extension_loaded($e) or exit("Missing extension: $e\n"); }'
 
 WORKDIR /var/www/html
 
