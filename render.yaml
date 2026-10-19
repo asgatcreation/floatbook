@@ -1,0 +1,71 @@
+# How Render runs FloatBook. Connect this repository as a Blueprint and Render reads
+# this file; the values marked `sync: false` are the secrets you paste in yourself.
+#
+# The database is Neon, not Render, so that the books survive a redeploy: Render's free
+# disk is wiped every time.
+
+services:
+    - type: web
+      name: floatbook
+      runtime: docker
+      plan: free
+      region: frankfurt # closest free region to Nigeria
+      branch: main
+      dockerfilePath: ./Dockerfile
+      healthCheckPath: /up
+      autoDeploy: true
+
+      envVars:
+          - key: APP_NAME
+            value: FloatBook
+          - key: APP_ENV
+            value: production
+          - key: APP_DEBUG
+            value: false
+          # Generate with: php artisan key:generate --show
+          - key: APP_KEY
+            sync: false
+          # Set to your Render URL, e.g. https://floatbook.onrender.com
+          - key: APP_URL
+            sync: false
+          - key: APP_TIMEZONE
+            value: UTC
+
+          # Neon connection string (it overrides the DB_* values).
+          - key: DB_URL
+            sync: false
+          - key: DB_CONNECTION
+            value: pgsql
+          - key: DB_SSLMODE
+            value: require
+
+          - key: SESSION_DRIVER
+            value: database
+          - key: SESSION_ENCRYPT
+            value: true
+          - key: QUEUE_CONNECTION
+            value: database
+          - key: CACHE_STORE
+            value: database
+
+          # Brevo's HTTP API: Render's free plan blocks outgoing SMTP.
+          - key: MAIL_MAILER
+            value: brevo
+          - key: BREVO_API_KEY
+            sync: false
+          # Must be an address you have verified with Brevo.
+          - key: MAIL_FROM_ADDRESS
+            sync: false
+          - key: MAIL_FROM_NAME
+            value: FloatBook
+
+          # The public demo business, rebuilt nightly.
+          - key: DEMO_MODE
+            value: true
+          - key: DEMO_RESET_AT
+            value: "02:30"
+
+          - key: LOG_CHANNEL
+            value: stderr
+          - key: LOG_LEVEL
+            value: warning

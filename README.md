@@ -10,14 +10,35 @@ log of every transaction, tracks cash and e-wallet float at every outlet, runs t
 cash count with shortage detection, follows up failed transactions that need a reversal,
 and shows the owner today's numbers across all outlets, live.
 
-> **Status:** in active development. The live demo, screenshots and demo logins will be
-> added here when the first version is deployed.
+**[Try the demo](https://floatbook.onrender.com)** — one click signs you in as the owner,
+a supervisor, an agent or an accountant of a made-up business with two weeks of trading.
+Nothing you do there is kept: it is rebuilt every night.
+
+> The demo sleeps when nobody is using it, so the first page can take ~30 seconds.
 
 > **Honest note:** FloatBook does **not** connect to Moniepoint, OPay, Palmpay or any other
 > provider. Data comes from manual entry at the counter and from imported provider
 > statements (CSV/Excel). The code is designed around an adapter layer so real integrations can be added later.
 
 ---
+
+## What it does
+
+|                                     |                                                                                                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Record a sale in seconds**        | A keypad built for one thumb. Charges, provider fees and your profit are worked out as you type, from your own price list.                                       |
+| **Works offline**                   | Entries are kept on the phone when the network drops and sent when it returns — never twice. Installs to the home screen.                                        |
+| **Several terminals per shop**      | Any provider, including bank POS. Each terminal keeps its own record and balance, or shares one. Staff are assigned to the machines they use.                    |
+| **Cash and wallet float**           | Every drawer and wallet, live. Top-ups and transfers need approval; low balances raise an alert.                                                                 |
+| **End-of-day count**                | A blind count of the notes and each terminal's balance. Submitting closes the day for good; a supervisor approves any difference and can hold staff responsible. |
+| **Failed and pending transactions** | Each one opens a case with a 72-hour target, notes and ticket numbers, so no customer is forgotten.                                                              |
+| **Provider statements**             | Upload the CSV or Excel export; FloatBook shows what matches, what disagrees and what nobody recorded.                                                           |
+| **Reports**                         | Any date range, grouped by day, outlet, terminal, staff or type, downloadable as Excel or CSV.                                                                   |
+| **Unusual activity**                | Duplicate references, unusually large amounts, after-hours entries, frequent voids and repeated shortages get flagged for a person to judge.                     |
+| **The owner's view**                | A live dashboard and one email after closing time with the day's profit and anything needing attention.                                                          |
+
+Every figure sits on a **double-entry ledger** checked by the database itself, and nothing
+is ever edited or deleted in place: mistakes are voided or reversed and both sides stay.
 
 ## Tech stack
 
@@ -29,7 +50,7 @@ and shows the owner today's numbers across all outlets, live.
 | Background work | Laravel queues and scheduler (database driver)             |
 | Tests           | Pest 5 (unit and feature), Playwright (end-to-end)         |
 | Quality         | Pint, Larastan (level 7), Oxlint, vue-tsc, GitHub Actions  |
-| Hosting         | Render (Docker), Brevo email API                           |
+| Hosting         | Render (Docker), Neon PostgreSQL, Brevo email API          |
 
 ## Running it locally
 
@@ -82,6 +103,20 @@ npm run types:check     # TypeScript
 ```
 
 GitHub Actions runs all of these, plus a production build, on every push.
+
+## Putting it online
+
+See **[docs/DEPLOY.md](docs/DEPLOY.md)** — a step-by-step walk through Neon (database),
+Brevo (email), Render (the app) and a free pinger to keep it awake. All free plans.
+
+The whole thing runs as one Docker container: nginx, PHP-FPM, the queue worker and the
+scheduler, kept alive by supervisord. `render.yaml` describes the service; secrets are
+pasted into Render and never committed.
+
+## Guided tour
+
+**[docs/TRY-IT.md](docs/TRY-IT.md)** walks through every screen on your own computer, in
+the order a real business would use them.
 
 ## Licence
 
