@@ -43,10 +43,17 @@ RUN cp .env.example .env \
 FROM php:8.5-fpm-alpine
 
 # pdo_pgsql for Neon, intl/bcmath for money and dates, zip for Excel exports.
-RUN apk add --no-cache nginx supervisor postgresql-dev icu-dev libzip-dev oniguruma-dev \
-    && docker-php-ext-install -j"$(nproc)" pdo_pgsql intl bcmath zip opcache \
-    && apk del postgresql-dev icu-dev libzip-dev \
-    && rm -rf /var/cache/apk/*
+#
+# The runtime libraries are installed in their own right, so removing the build headers
+# afterwards cannot take them with them. Opcache is built on its own: building it
+# alongside the others in parallel races and leaves nothing to install.
+RUN apk add --no-cache nginx supervisor libpq icu-libs libzip \
+    && apk add --no-cache --virtual .build-deps postgresql-dev icu-dev libzip-dev \
+    && docker-php-ext-install -j"$(nproc)" pdo_pgsql intl bcmath zip \
+    && docker-php-ext-install opcache \
+    && apk del --no-network .build-deps \
+    && rm -rf /var/cache/apk/* /usr/src/php* \
+    && php -m | grep -E 'pdo_pgsql|intl|bcmath|zip|Zend OPcache'
 
 WORKDIR /var/www/html
 
