@@ -14,6 +14,7 @@ import {
     Zap,
 } from '@lucide/vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import InstallPrompt from '@/components/InstallPrompt.vue';
 import EntryPreview from '@/components/marketing/EntryPreview.vue';
 import { dashboard, login, privacy, register, terms } from '@/routes';
 import { login as demoLogin } from '@/routes/demo';
@@ -154,6 +155,9 @@ const safeguards = [
                 </div>
             </nav>
         </header>
+
+        <!-- On a phone, before anything else: how to keep FloatBook on the home screen. -->
+        <InstallPrompt />
 
         <main>
             <!-- Hero -->

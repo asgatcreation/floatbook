@@ -35,7 +35,13 @@ export function isInstalled(): boolean {
 }
 
 export function isIos(): boolean {
-    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const agent = navigator.userAgent;
+
+    // An iPad on iPadOS 13 and later calls itself a Mac; the touch screen gives it away.
+    const iPadPretendingToBeAMac =
+        /macintosh/i.test(agent) && navigator.maxTouchPoints > 1;
+
+    return /iphone|ipad|ipod/i.test(agent) || iPadPretendingToBeAMac;
 }
 
 export async function install(): Promise<boolean> {
