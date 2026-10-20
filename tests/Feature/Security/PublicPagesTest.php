@@ -51,3 +51,15 @@ test('behind a TLS proxy, links and asset tags are https', function () {
     expect($response->getContent())->not->toContain('http://floatbook.test');
     expect(url('/login'))->toStartWith('https://');
 });
+
+// The theme script has to run before the first paint, so it is written into the page.
+// Without a matching nonce the policy blocks it and the page flashes the wrong theme.
+test('the inline theme script carries the nonce the policy allows', function () {
+    $response = $this->get('/');
+
+    $policy = $response->headers->get('Content-Security-Policy');
+    expect($policy)->toMatch("/script-src 'self' 'nonce-[A-Za-z0-9+\/=]+'/");
+
+    preg_match("/'nonce-([^']+)'/", (string) $policy, $fromHeader);
+    expect($response->getContent())->toContain('<script nonce="'.$fromHeader[1].'">');
+});

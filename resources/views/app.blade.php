@@ -4,8 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-        <script>
+        {{-- Inline script to detect system dark mode preference and apply it immediately.
+             It runs before the page paints, so it cannot live in a separate file: the
+             nonce is what lets it past the content security policy. --}}
+        <script nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}">
             (function() {
                 const appearance = '{{ $appearance ?? "system" }}';
 

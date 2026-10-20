@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -15,6 +16,11 @@ class SecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // A one-off token for this request, so the small inline script in the layout
+        // is allowed to run while every other inline script stays blocked. It has to be
+        // made before the page is rendered, because the layout prints it.
+        $nonce = Vite::useCspNonce();
+
         $response = $next($request);
 
         $response->headers->set('X-Frame-Options', 'DENY');
@@ -32,7 +38,7 @@ class SecurityHeaders
         // Not while developing: assets then come from Vite's dev server, whose address
         // (an IPv6 literal) a policy cannot express, and a local policy protects nobody.
         if (! app()->isLocal()) {
-            $response->headers->set('Content-Security-Policy', $this->policy());
+            $response->headers->set('Content-Security-Policy', $this->policy($nonce));
         }
 
         return $response;
@@ -42,11 +48,11 @@ class SecurityHeaders
      * Everything is served from our own domain: the fonts are bundled, so no outside
      * origin is needed. `data:` covers the inline SVG icons and the manifest's images.
      */
-    private function policy(): string
+    private function policy(string $nonce): string
     {
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self'",
+            "script-src 'self' 'nonce-{$nonce}'",
             // Tailwind writes a few inline styles at runtime.
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: blob:",
