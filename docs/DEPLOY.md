@@ -114,10 +114,12 @@ Once the service is live, Render shows its URL at the top, something like
 `https://floatbook.onrender.com`.
 
 1. Open the **Environment** tab of the service.
-2. Set **`APP_URL`** to that exact URL (no slash at the end) and click **Save, rebuild,
-   and deploy**.
+2. Set **`APP_URL`** to that exact URL — starting `https://`, with no slash at the end —
+   and click **Save, rebuild, and deploy**.
 
-This matters: links inside emails and the sign-in flow use `APP_URL`.
+This matters: links inside emails and the sign-in flow use `APP_URL`. It must start with
+`https://`: a page served over https cannot load a stylesheet or a script over plain
+http, so an `http://` value here shows visitors a blank white page.
 
 ---
 

@@ -37,3 +37,17 @@ test('a signed-out visitor is sent to the login page, not shown a stack trace', 
     $this->get(route('dashboard'))->assertRedirect(route('login'));
     $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertRedirect(route('no-business'));
 });
+
+// The host terminates TLS and forwards the request over plain HTTP. If the forwarded
+// headers are ignored, every asset tag says http:// on an https:// page and the browser
+// blocks them all, leaving a blank screen.
+test('behind a TLS proxy, links and asset tags are https', function () {
+    $response = $this->withHeaders([
+        'X-Forwarded-Proto' => 'https',
+        'X-Forwarded-Host' => 'floatbook.test',
+    ])->get('/');
+
+    $response->assertOk();
+    expect($response->getContent())->not->toContain('http://floatbook.test');
+    expect(url('/login'))->toStartWith('https://');
+});

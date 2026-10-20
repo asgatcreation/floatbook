@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
@@ -62,6 +63,12 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        // Links and asset tags must say https, even if a proxy header is ever missing:
+        // a page served over https cannot load a script over http.
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+        }
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

@@ -23,8 +23,10 @@ class SecurityHeaders
         // Nothing here needs a camera, microphone or location.
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
 
+        // Not includeSubDomains: FloatBook sits on a shared parent domain in
+        // production, and this header has no business speaking for anyone else's app.
         if ($request->secure()) {
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000');
         }
 
         // Not while developing: assets then come from Vite's dev server, whose address
@@ -54,6 +56,9 @@ class SecurityHeaders
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "object-src 'none'",
+            // 'self' means the same scheme too, so an http:// asset on an https:// page
+            // would be blocked outright. Upgrade it instead of breaking the page.
+            'upgrade-insecure-requests',
         ]);
     }
 }

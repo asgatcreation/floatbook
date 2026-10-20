@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Render terminates TLS and forwards the request over plain HTTP, so the
+        // forwarded headers are what tell Laravel the visitor is on HTTPS.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             SecurityHeaders::class,
             HandleAppearance::class,
