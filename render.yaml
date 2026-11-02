@@ -67,5 +67,9 @@ services:
 
           - key: LOG_CHANNEL
             value: stderr
+          # One JSON object per line, so the hosting log search can filter on fields
+          # rather than matching text.
+          - key: LOG_STDERR_FORMATTER
+            value: Monolog\Formatter\JsonFormatter
           - key: LOG_LEVEL
             value: warning
