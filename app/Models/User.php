@@ -15,9 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Throwable;
 
 /**
  * A person who can sign in. A user can belong to several businesses through memberships.
@@ -95,6 +97,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         $code = app(OneTimeCodes::class)->issue($this, OneTimeCode::PURPOSE_VERIFY_EMAIL);
 
-        $this->notify(new EmailVerificationCode($code));
+        // The code is saved before it is sent, so "Send a new code" still works even if
+        // the email provider is down. Signing up is never failed over a send: that would
+        // leave someone with an account they cannot reach and an error page to look at.
+        try {
+            $this->notify(new EmailVerificationCode($code));
+        } catch (Throwable $e) {
+            Log::error('Could not send the email verification code.', [
+                'user_id' => $this->id,
+                'reason' => $e->getMessage(),
+            ]);
+        }
     }
 }

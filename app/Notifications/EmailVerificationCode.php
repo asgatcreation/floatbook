@@ -4,11 +4,20 @@ namespace App\Notifications;
 
 use App\Models\User;
 use App\Support\OneTimeCodes;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class EmailVerificationCode extends Notification
+/**
+ * Queued on purpose: signing up must not depend on the email provider answering.
+ * The account is created before this is sent, so a slow or failing provider would
+ * otherwise leave someone holding an account and an error page.
+ */
+class EmailVerificationCode extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(public readonly string $code) {}
 
     /**
